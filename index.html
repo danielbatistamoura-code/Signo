@@ -297,6 +297,11 @@
                         <i class="fa-solid fa-database me-2"></i>Logs Realtime & BD
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-encyclopedia-btn" data-bs-toggle="pill" data-bs-target="#tab-encyclopedia" type="button" role="tab">
+                        <i class="fa-solid fa-book-journal-whills me-2"></i>Enciclopédia dos Signos
+                    </button>
+                </li>
             </ul>
         </header>
 
@@ -333,7 +338,7 @@
                                     </div>
                                 </div>
 
-                                <button type="submit" class="btn btn-gold w-100 py-3 text-uppercase font-cinzel">
+                                <button type="submit" id="btn-submit-zodiac" class="btn btn-gold w-100 py-3 text-uppercase font-cinzel">
                                     <i class="fa-solid fa-gem me-2"></i> Descobrir Meu Signo & Revelar Destino
                                 </button>
                             </form>
@@ -412,6 +417,11 @@
                                         </button>
                                     </li>
                                     <li class="nav-item">
+                                        <button class="nav-link text-warning font-cinzel" id="horoscope-tab" data-bs-toggle="tab" data-bs-target="#horoscope-pane" type="button">
+                                            <i class="fa-solid fa-crystal-ball me-1"></i> Horóscopo de Hoje
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
                                         <button class="nav-link text-warning font-cinzel" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit-pane" type="button">
                                             <i class="fa-solid fa-shield-halved me-1"></i> Análise da Sessão (Database)
                                         </button>
@@ -449,6 +459,34 @@
                                         <div>
                                             <h6 class="text-success font-cinzel"><i class="fa-solid fa-briefcase me-2"></i>Na Carreira & Finanças</h6>
                                             <p id="res-career-text" class="lh-lg text-white-80"></p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Horóscopo do Dia -->
+                                    <div class="tab-pane fade" id="horoscope-pane" role="tabpanel">
+                                        <h4 class="font-cinzel text-warning mb-3"><i class="fa-solid fa-star me-2"></i>Previsão Astral do Dia</h4>
+                                        <div class="p-3 bg-dark bg-opacity-50 rounded border border-warning border-opacity-25 mb-3">
+                                            <p id="res-daily-horoscope" class="lh-lg text-white-80 mb-0"></p>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <div class="p-2 text-center bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <small class="text-white-50 d-block">Energia do Dia</small>
+                                                    <strong id="res-energy-level" class="text-warning">95% Elevada</strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-2 text-center bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <small class="text-white-50 d-block">Foco Astral</small>
+                                                    <strong id="res-astral-focus" class="text-info">Intuição & Ação</strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-2 text-center bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <small class="text-white-50 d-block">Cor do Dia</small>
+                                                    <strong id="res-daily-color" class="text-success">Dourado Solar</strong>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -572,6 +610,17 @@
 
             </div>
 
+            <!-- SECTION 3: ENCICLOPÉDIA DOS SIGNOS -->
+            <div class="tab-pane fade" id="tab-encyclopedia" role="tabpanel">
+                <div class="glass-card p-4 mb-4 text-center">
+                    <h2 class="font-cinzel gold-gradient-text mb-2">Enciclopédia Zodíaca Completa</h2>
+                    <p class="text-white-50 mb-0">Explore os 12 signos do zodíaco, seus elementos, regentes e simbologias.</p>
+                </div>
+                <div class="row g-4" id="encyclopediaGrid">
+                    <!-- Dynamic rendering of 12 signs -->
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -630,15 +679,19 @@
             }
         }
 
-        // Audio System via Web Audio API
+        // Audio System via Web Audio API (Safe & Non-blocking)
         let audioMuted = false;
         let audioCtx = null;
 
         function playCosmicChime() {
             if (audioMuted) return;
             try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
 
                 const now = audioCtx.currentTime;
                 const osc = audioCtx.createOscillator();
@@ -648,7 +701,7 @@
                 osc.frequency.setValueAtTime(528, now); // Solfeggio frequency 528Hz
                 osc.frequency.exponentialRampToValueAtTime(1056, now + 0.8);
 
-                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.setValueAtTime(0.12, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
 
                 osc.connect(gain);
@@ -657,7 +710,7 @@
                 osc.start(now);
                 osc.stop(now + 1.2);
             } catch (e) {
-                console.log("Audio play allowed on user gesture:", e);
+                // Ignore audio errors silently to prevent freezing
             }
         }
 
@@ -685,7 +738,8 @@
                 strengths: "Liderança nata, determinação, honestidade direta, iniciativa indomável.",
                 weaknesses: "Impaciência, impulsividade, pavio curto.",
                 love: "Apaixona-se intensamente e busca parceiros independentes e cheios de vida.",
-                career: "Excelente em cargos de comando, empreendedorismo e projetos desafiadores."
+                career: "Excelente em cargos de comando, empreendedorismo e projetos desafiadores.",
+                horoscope: "Hoje as forças de Marte impulsionam sua coragem. É o momento perfeito para tomar a iniciativa em novos projetos e defender suas ideias com paixão."
             },
             {
                 sign: "Touro",
@@ -698,7 +752,8 @@
                 strengths: "Persistência inabalável, confiabilidade, senso estético primoroso.",
                 weaknesses: "Teimosia rígida, resistência a mudanças repentinas.",
                 love: "Procura conexões duradouras, segurança emocional e momentos de carinho e aconchego.",
-                career: "Sobressai-se no setor financeiro, arquitetura, culinária e gestão de negócios."
+                career: "Sobressai-se no setor financeiro, arquitetura, culinária e gestão de negócios.",
+                horoscope: "Sua determinação estará em destaque. Foque na consolidação de metas financeiras e desfrute dos bons momentos com as pessoas queridas."
             },
             {
                 sign: "Gêmeos",
@@ -711,7 +766,8 @@
                 strengths: "Adaptabilidade rápida, perspicácia mental, carisma social.",
                 weaknesses: "Inconstância, dispersão de foco.",
                 love: "Conectado pela estimulação intelectual; precisa de conversas profundas e diversão constante.",
-                career: "Brilha no jornalismo, marketing, ensino e tecnologia."
+                career: "Brilha no jornalismo, marketing, ensino e tecnologia.",
+                horoscope: "Sua mente estará efervescente com novas ideias. Excelente dia para negociações, contatos sociais e aprendizado rápido."
             },
             {
                 sign: "Câncer",
@@ -724,7 +780,8 @@
                 strengths: "Intuição aguçada, lealdade profunda, inteligência emocional.",
                 weaknesses: "Hipersensibilidade, apego excessivo ao passado.",
                 love: "Busca um porto seguro e entrega de alma inteira em relacionamentos sinceros.",
-                career: "Destaca-se em psicologia, recursos humanos, saúde e artes visuais."
+                career: "Destaca-se em psicologia, recursos humanos, saúde e artes visuais.",
+                horoscope: "Sua intuição estará aguçada. Confie no seu sexto sentido ao tomar decisões e busque momentos de harmonia no lar."
             },
             {
                 sign: "Leão",
@@ -737,7 +794,8 @@
                 strengths: "Magnetismo natural, nobreza de caráter, otimismo contagiante.",
                 weaknesses: "Orgulho elevado, necessidade contínua de validação.",
                 love: "Dramático e romântico, adora gestos grandiosos e demonstrações de carinho público.",
-                career: "Ideal para liderança executiva, artes cênicas, entretenimento e relações públicas."
+                career: "Ideal para liderança executiva, artes cênicas, entretenimento e relações públicas.",
+                horoscope: "Seu brilho pessoal está irreprimível hoje. Aproveite a autoconfiança para liderar e inspirar sua equipe ou comunidade."
             },
             {
                 sign: "Virgem",
@@ -750,7 +808,8 @@
                 strengths: "Atenção cirúrgica aos detalhes, dedicação ao trabalho, praticidade.",
                 weaknesses: "Perfeccionismo excessivo, autocrítica rigorosa.",
                 love: "Demonstra amor através de atos práticos de serviço e cuidado no dia a dia.",
-                career: "Excelente em análise de dados, medicina, ciência e auditorias."
+                career: "Excelente em análise de dados, medicina, ciência e auditorias.",
+                horoscope: "Organização e método serão seus maiores aliados. Resolva pendências acumuladas e sinta o alívio da produtividade."
             },
             {
                 sign: "Libra",
@@ -763,7 +822,8 @@
                 strengths: "Senso de justiça impecável, charme, capacidade de ver múltiplos lados.",
                 weaknesses: "Indecisão ao tomar lados, aversão a confrontos necessários.",
                 love: "Idealista no amor, valoriza o companheirismo refinado e a paz conjugal.",
-                career: "Sobressai em advocacia, mediação, design de interiores e diplomacia."
+                career: "Sobressai em advocacia, mediação, design de interiores e diplomacia.",
+                horoscope: "Momento propício para cultivar a paz e criar alianças estratégicas. A diplomacia abrirá portas importantes hoje."
             },
             {
                 sign: "Escorpião",
@@ -776,7 +836,8 @@
                 strengths: "Poder de regeneração, foco inquebrável, lealdade feroz.",
                 weaknesses: "Desconfiança inicial, ciúme ou guardar ressentimentos.",
                 love: "Exige verdade absoluta e profundidade emocional sem superficialidade.",
-                career: "Brilha em investigação, cirurgia, psicanálise e inteligência estratégica."
+                career: "Brilha em investigação, cirurgia, psicanálise e inteligência estratégica.",
+                horoscope: "Sua percepção profunda revelará detalhes ocultos. Dia favorável para transformações pessoais e foco total em metas."
             },
             {
                 sign: "Sagitário",
@@ -789,7 +850,8 @@
                 strengths: "Visão ampla de futuro, entusiasmo expansivo, honestidade cristalina.",
                 weaknesses: "Sinceridade sem filtro, inquietude constante.",
                 love: "Precisa de espaço, liberdade de movimento e companheiros de jornada intelectual e viagens.",
-                career: "Excelente para turismo internacional, filosofia, docência superior e expansão comercial."
+                career: "Excelente para turismo internacional, filosofia, docência superior e expansão comercial.",
+                horoscope: "Otimismo e vontade de expandir horizontes dominam o dia. Busque novos conhecimentos e planeje novos voos."
             },
             {
                 sign: "Capricórnio",
@@ -802,7 +864,8 @@
                 strengths: "Responsabilidade máxima, pragmatismo, estratégia a longo prazo.",
                 weaknesses: "Pessimismo prévio, exigência elevada de desempenho.",
                 love: "Cauteloso para abrir o coração, mas extremamente fiel e protetor quando assume compromisso.",
-                career: "Natural para cargos de alta liderança corporativa, engenharia, finanças e governo."
+                career: "Natural para cargos de alta liderança corporativa, engenharia, finanças e governo.",
+                horoscope: "Seu foco em resultados e paciência trarão avanços concretos. Um passo sólido na direção dos seus maiores objetivos."
             },
             {
                 sign: "Aquário",
@@ -815,7 +878,8 @@
                 strengths: "Inovação disruptiva, mente aberta, lealdade aos ideais e amigos.",
                 weaknesses: "Distanciamento emocional, teimosia conceitual.",
                 love: "Busca primeiramente a amizade genuína e o respeito à individualidade de ambos.",
-                career: "Sobressai em inovação tecnológica, aviação, causas sociais e ciências puras."
+                career: "Sobressai em inovação tecnológica, aviação, causas sociais e ciências puras.",
+                horoscope: "Pensamento original e soluções fora do comum. Colabore em grupo e traga ideias inovadoras para a sua rotina."
             },
             {
                 sign: "Peixes",
@@ -828,7 +892,8 @@
                 strengths: "Empatia ilimitada, talento artístico, imaginação transcendental.",
                 weaknesses: "Idealização excessiva, escapismo da realidade dura.",
                 love: "Entrega-se com romantismo poético e compaixão total ao ser amado.",
-                career: "Brilha em música, artes plásticas, psicologia, cinema e causas filantrópicas."
+                career: "Brilha em música, artes plásticas, psicologia, cinema e causas filantrópicas.",
+                horoscope: "Criatividade em alta e compaixão fluindo livremente. Espaço ideal para artes, inspiração espiritual e ajuda ao próximo."
             }
         ];
 
@@ -880,6 +945,35 @@
         function escapeHtml(str) {
             if (!str) return '';
             return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Render Encyclopedia Cards
+        function renderEncyclopedia() {
+            const grid = document.getElementById('encyclopediaGrid');
+            if (!grid) return;
+
+            grid.innerHTML = ZODIAC_DATA.map(z => `
+                <div class="col-lg-4 col-md-6">
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h3 class="font-cinzel gold-gradient-text mb-0">${z.sign}</h3>
+                                <i class="fa-solid ${z.icon} fs-2 text-warning"></i>
+                            </div>
+                            <p class="text-white-50 small mb-2">(${z.start[1]}/${z.start[0]} a ${z.end[1]}/${z.end[0]})</p>
+                            <div class="d-flex gap-2 flex-wrap mb-3">
+                                <span class="badge badge-element">${z.element}</span>
+                                <span class="badge badge-element">${z.ruler}</span>
+                            </div>
+                            <p class="small text-white-80 lh-base">${z.description}</p>
+                        </div>
+                        <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+                            <small class="text-warning d-block"><strong>Pedra:</strong> ${z.stone}</small>
+                            <small class="text-warning d-block"><strong>Números:</strong> ${z.numbers}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // Render Logs Table with Local Memory / Firebase Sync
@@ -976,111 +1070,121 @@
             document.getElementById('stat-closed-sessions').innerText = closedCount;
         }
 
-        // Discovery calculation and session start
-        window.processZodiacDiscovery = async function() {
-            const name = document.getElementById('userName').value.trim() || 'ds';
-            const dobString = document.getElementById('birthDate').value;
-            const tobString = document.getElementById('birthTime').value || 'Não informada';
+        // Discovery calculation and session start (Synchronous UI - No Freezing)
+        window.processZodiacDiscovery = function() {
+            try {
+                const name = document.getElementById('userName').value.trim() || 'ds';
+                const dobString = document.getElementById('birthDate').value;
+                const tobString = document.getElementById('birthTime').value || 'Não informada';
 
-            if (!dobString) {
-                showCustomModal("Atenção", "Por favor, insira uma data de nascimento válida.");
-                return;
-            }
-
-            playCosmicChime();
-
-            const birthDateParts = dobString.split('-');
-            const birthDateObj = new Date(birthDateParts[0], birthDateParts[1] - 1, birthDateParts[2]);
-
-            const signInfo = getZodiacSign(birthDateObj);
-            const { age, daysToBday } = calculateBirthStats(birthDateObj);
-
-            sessionStartTime = new Date();
-            
-            // Populate Result UI
-            document.getElementById('res-user-name').innerText = name;
-            document.getElementById('res-element').innerText = signInfo.element;
-            document.getElementById('res-ruler').innerText = signInfo.ruler;
-            document.getElementById('res-quality').innerText = signInfo.quality;
-
-            document.getElementById('res-icon').className = `fa-solid ${signInfo.icon} display-1 text-warning`;
-            document.getElementById('res-sign-name').innerText = signInfo.sign;
-            document.getElementById('res-sign-dates').innerText = `(${signInfo.start[1]}/${signInfo.start[0]} - ${signInfo.end[1]}/${signInfo.end[0]})`;
-
-            document.getElementById('res-stone').innerText = signInfo.stone;
-            document.getElementById('res-color').innerText = signInfo.color;
-            document.getElementById('res-numbers').innerText = signInfo.numbers;
-            document.getElementById('res-compat').innerText = signInfo.compat;
-
-            document.getElementById('res-description').innerText = signInfo.description;
-            document.getElementById('res-strengths').innerText = signInfo.strengths;
-            document.getElementById('res-weaknesses').innerText = signInfo.weaknesses;
-            document.getElementById('res-love-text').innerText = signInfo.love;
-            document.getElementById('res-career-text').innerText = signInfo.career;
-
-            // Session Audit Tab UI
-            document.getElementById('audit-dob').innerText = formatDateBR(birthDateObj);
-            document.getElementById('audit-tob').innerText = tobString;
-            document.getElementById('audit-age').innerText = `${age} anos`;
-            document.getElementById('audit-next-bday').innerText = `${daysToBday} dias restantes`;
-            document.getElementById('audit-entry-time').innerText = formatTimeBR(sessionStartTime);
-            document.getElementById('audit-session-status').className = 'badge bg-success';
-            document.getElementById('audit-session-status').innerText = 'Ativa';
-
-            document.getElementById('form-container').classList.add('d-none');
-            document.getElementById('result-container').classList.remove('d-none');
-
-            activeSessionDocId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-            
-            const logData = {
-                id: activeSessionDocId,
-                uid: currentUser ? currentUser.uid : 'anon_user',
-                userName: name,
-                birthDate: dobString,
-                birthTime: tobString,
-                zodiacSign: signInfo.sign,
-                element: signInfo.element,
-                ruler: signInfo.ruler,
-                quality: signInfo.quality,
-                age: age,
-                daysToNextBirthday: daysToBday,
-                entryTime: sessionStartTime.toISOString(),
-                exitTime: null,
-                durationSeconds: 0,
-                status: 'active',
-                timestamp: new Date().toISOString()
-            };
-
-            // Local fallback array insertion
-            allLogsData.unshift(logData);
-            renderLogsTable();
-            updateDashboardStats();
-
-            // Sync with Firebase if available
-            if (isFirebaseOnline && window.firebaseSetDoc) {
-                try {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
-                    const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
-                    await window.firebaseSetDoc(logRef, {
-                        ...logData,
-                        timestamp: window.firebaseServerTimestamp()
-                    });
-                } catch (err) {
-                    console.warn("Firestore write error, relying on local state:", err);
+                if (!dobString) {
+                    showCustomModal("Atenção", "Por favor, insira uma data de nascimento válida.");
+                    return;
                 }
-            }
 
-            // Start Live Timer
-            if (liveTimerInterval) clearInterval(liveTimerInterval);
-            liveTimerInterval = setInterval(() => {
-                if (!sessionStartTime) return;
-                const secs = Math.floor((new Date() - sessionStartTime) / 1000);
-                document.getElementById('audit-timer').innerText = `(${secs}s de navegação)`;
-            }, 1000);
+                playCosmicChime();
+
+                const birthDateParts = dobString.split('-');
+                const birthDateObj = new Date(birthDateParts[0], birthDateParts[1] - 1, birthDateParts[2]);
+
+                const signInfo = getZodiacSign(birthDateObj);
+                const { age, daysToBday } = calculateBirthStats(birthDateObj);
+
+                sessionStartTime = new Date();
+                
+                // Populate Result UI instantly (< 10ms)
+                document.getElementById('res-user-name').innerText = name;
+                document.getElementById('res-element').innerText = signInfo.element;
+                document.getElementById('res-ruler').innerText = signInfo.ruler;
+                document.getElementById('res-quality').innerText = signInfo.quality;
+
+                document.getElementById('res-icon').className = `fa-solid ${signInfo.icon} display-1 text-warning`;
+                document.getElementById('res-sign-name').innerText = signInfo.sign;
+                document.getElementById('res-sign-dates').innerText = `(${signInfo.start[1]}/${signInfo.start[0]} - ${signInfo.end[1]}/${signInfo.end[0]})`;
+
+                document.getElementById('res-stone').innerText = signInfo.stone;
+                document.getElementById('res-color').innerText = signInfo.color;
+                document.getElementById('res-numbers').innerText = signInfo.numbers;
+                document.getElementById('res-compat').innerText = signInfo.compat;
+
+                document.getElementById('res-description').innerText = signInfo.description;
+                document.getElementById('res-strengths').innerText = signInfo.strengths;
+                document.getElementById('res-weaknesses').innerText = signInfo.weaknesses;
+                document.getElementById('res-love-text').innerText = signInfo.love;
+                document.getElementById('res-career-text').innerText = signInfo.career;
+                document.getElementById('res-daily-horoscope').innerText = signInfo.horoscope;
+
+                // Session Audit Tab UI
+                document.getElementById('audit-dob').innerText = formatDateBR(birthDateObj);
+                document.getElementById('audit-tob').innerText = tobString;
+                document.getElementById('audit-age').innerText = `${age} anos`;
+                document.getElementById('audit-next-bday').innerText = `${daysToBday} dias restantes`;
+                document.getElementById('audit-entry-time').innerText = formatTimeBR(sessionStartTime);
+                document.getElementById('audit-session-status').className = 'badge bg-success';
+                document.getElementById('audit-session-status').innerText = 'Ativa';
+
+                document.getElementById('form-container').classList.add('d-none');
+                document.getElementById('result-container').classList.remove('d-none');
+
+                activeSessionDocId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                
+                const logData = {
+                    id: activeSessionDocId,
+                    uid: currentUser ? currentUser.uid : 'anon_user',
+                    userName: name,
+                    birthDate: dobString,
+                    birthTime: tobString,
+                    zodiacSign: signInfo.sign,
+                    element: signInfo.element,
+                    ruler: signInfo.ruler,
+                    quality: signInfo.quality,
+                    age: age,
+                    daysToNextBirthday: daysToBday,
+                    entryTime: sessionStartTime.toISOString(),
+                    exitTime: null,
+                    durationSeconds: 0,
+                    status: 'active',
+                    timestamp: new Date().toISOString()
+                };
+
+                // Local array insertion
+                allLogsData.unshift(logData);
+                renderLogsTable();
+                updateDashboardStats();
+
+                // Non-blocking Firestore Write (Fire & Forget in Background)
+                if (isFirebaseOnline && window.firebaseSetDoc && window.firebaseDoc) {
+                    setTimeout(async () => {
+                        try {
+                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
+                            const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
+                            await window.firebaseSetDoc(logRef, {
+                                ...logData,
+                                timestamp: window.firebaseServerTimestamp ? window.firebaseServerTimestamp() : new Date().toISOString()
+                            });
+                        } catch (err) {
+                            console.warn("Background Firestore write error (fallback used):", err);
+                        }
+                    }, 0);
+                }
+
+                // Start Live Timer
+                if (liveTimerInterval) clearInterval(liveTimerInterval);
+                liveTimerInterval = setInterval(() => {
+                    if (!sessionStartTime) return;
+                    const secs = Math.floor((new Date() - sessionStartTime) / 1000);
+                    const timerEl = document.getElementById('audit-timer');
+                    if (timerEl) timerEl.innerText = `(${secs}s de navegação)`;
+                }, 1000);
+
+            } catch (err) {
+                console.error("Error in processZodiacDiscovery:", err);
+                showCustomModal("Aviso", "Ocorreu um erro ao processar os dados. Tente novamente.");
+            }
         };
 
         // Close Session
-        window.closeSessionExplicitly = async function(isNewQuery) {
+        window.closeSessionExplicitly = function(isNewQuery) {
             if (activeSessionDocId && sessionStartTime) {
                 const exitTime = new Date();
                 const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
@@ -1093,19 +1197,22 @@
                     localItem.status = 'closed';
                 }
 
-                // Update Firestore if available
-                if (isFirebaseOnline && window.firebaseUpdateDoc) {
-                    try {
-                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
-                        const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
-                        await window.firebaseUpdateDoc(logRef, {
-                            exitTime: exitTime.toISOString(),
-                            durationSeconds: durationSecs,
-                            status: 'closed'
-                        });
-                    } catch (e) {
-                        console.warn("Firestore update exit failed:", e);
-                    }
+                // Non-blocking Firestore update
+                if (isFirebaseOnline && window.firebaseUpdateDoc && window.firebaseDoc) {
+                    const docIdToClose = activeSessionDocId;
+                    setTimeout(async () => {
+                        try {
+                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
+                            const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', docIdToClose);
+                            await window.firebaseUpdateDoc(logRef, {
+                                exitTime: exitTime.toISOString(),
+                                durationSeconds: durationSecs,
+                                status: 'closed'
+                            });
+                        } catch (e) {
+                            console.warn("Firestore update exit background error:", e);
+                        }
+                    }, 0);
                 }
 
                 renderLogsTable();
@@ -1117,7 +1224,7 @@
             sessionStartTime = null;
 
             if (!isNewQuery) {
-                showCustomModal("Sessão Encerrada", "Sua saída foi devidamente registrada no banco de dados com o tempo total de navegação.");
+                showCustomModal("Sessão Encerrada", "Sua saída foi registrada com o tempo total de navegação.");
             }
             resetForm();
         };
@@ -1132,7 +1239,7 @@
             if (activeSessionDocId && sessionStartTime) {
                 const exitTime = new Date();
                 const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
-                if (isFirebaseOnline && window.firebaseUpdateDoc) {
+                if (isFirebaseOnline && window.firebaseUpdateDoc && window.firebaseDoc) {
                     const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
                     const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
                     window.firebaseUpdateDoc(logRef, {
@@ -1244,7 +1351,7 @@
 
         let width, height;
         let stars = [];
-        const STAR_COUNT = 140;
+        const STAR_COUNT = 130;
 
         function resizeCanvas() {
             width = canvas.width = window.innerWidth;
@@ -1305,7 +1412,7 @@
         }
 
         function drawConstellationLines() {
-            const maxDistance = 110;
+            const maxDistance = 100;
             for (let i = 0; i < stars.length; i++) {
                 for (let j = i + 1; j < stars.length; j++) {
                     const dx = stars[i].x - stars[j].x;
@@ -1313,7 +1420,7 @@
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < maxDistance) {
-                        const alpha = (1 - dist / maxDistance) * 0.15;
+                        const alpha = (1 - dist / maxDistance) * 0.12;
                         ctx.strokeStyle = `rgba(223, 183, 108, ${alpha})`;
                         ctx.lineWidth = 0.5;
                         ctx.beginPath();
@@ -1351,8 +1458,8 @@
             initStars();
             animateGalaxy();
 
-            // Backup timer to guarantee loading screen removal
-            setTimeout(hideLoadingScreen, 1500);
+            // Guarantee loading screen removal
+            setTimeout(hideLoadingScreen, 1000);
 
             // Default birthdate input
             const birthInput = document.getElementById('birthDate');
@@ -1360,6 +1467,7 @@
                 birthInput.value = '2000-01-01';
             }
 
+            renderEncyclopedia();
             renderLogsTable();
             updateDashboardStats();
         });
