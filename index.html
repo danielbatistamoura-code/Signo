@@ -37,6 +37,28 @@
             position: relative;
         }
 
+        /* Loading Screen Overlay */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
         /* Canvas Galactic Background */
         #galaxy-canvas {
             position: fixed;
@@ -241,6 +263,13 @@
 </head>
 <body>
 
+    <!-- Initial Loading Overlay -->
+    <div id="loading-screen">
+        <i class="fa-solid fa-star-and-crescent fs-1 text-warning fa-spin mb-3"></i>
+        <h4 class="font-cinzel gold-gradient-text">Iniciando Oráculo Zodíaco...</h4>
+        <p class="text-white-50 small">Alinhando constelações & conectando dados</p>
+    </div>
+
     <!-- Galactic Interactive Canvas -->
     <canvas id="galaxy-canvas"></canvas>
 
@@ -251,7 +280,10 @@
         <header class="d-flex flex-wrap justify-content-between align-items-center py-3 mb-4 border-bottom border-secondary border-opacity-25">
             <div class="d-flex align-items-center mb-2 mb-md-0">
                 <i class="fa-solid font-cinzel fa-star-and-crescent fs-2 text-warning me-3"></i>
-                <span class="fs-3 font-cinzel gold-gradient-text fw-bold">ORÁCULO ZODÍACO</span>
+                <div>
+                    <span class="fs-3 font-cinzel gold-gradient-text fw-bold d-block">ORÁCULO ZODÍACO</span>
+                    <small id="connection-status-badge" class="badge bg-secondary opacity-75" style="font-size: 0.7rem;">Modo Local / Conectando...</small>
+                </div>
             </div>
             
             <ul class="nav nav-pills nav-pills-mystic" id="mainTabs" role="tablist">
@@ -312,10 +344,10 @@
                 <!-- Result Container (Initially Hidden) -->
                 <div id="result-container" class="d-none">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <button class="btn btn-outline-gold px-4" onclick="resetForm()">
+                        <button class="btn btn-outline-gold px-4" onclick="closeSessionExplicitly(true)">
                             <i class="fa-solid fa-arrow-left me-2"></i> Nova Consulta
                         </button>
-                        <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="closeSessionExplicitly()">
+                        <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="closeSessionExplicitly(false)">
                             <i class="fa-solid fa-power-off me-1"></i> Encerrar Sessão / Registrar Saída
                         </button>
                     </div>
@@ -423,7 +455,7 @@
                                     <!-- Análise da Sessão (BD Audit) -->
                                     <div class="tab-pane fade" id="audit-pane" role="tabpanel">
                                         <h4 class="font-cinzel text-warning mb-3">Registro de Auditoria da Consulta</h4>
-                                        <p class="small text-white-50">Dados computados e sincronizados em tempo real no banco de dados Firebase Firestore:</p>
+                                        <p class="small text-white-50">Dados computados e sincronizados em tempo real no banco de dados Firestore:</p>
                                         
                                         <div class="row g-3 mt-1">
                                             <div class="col-md-6">
@@ -530,7 +562,7 @@
                             <tbody id="logsTableBody">
                                 <tr>
                                     <td colspan="7" class="text-center py-4 text-white-50">
-                                        <i class="fa-solid fa-spinner fa-spin me-2"></i> Carregando registros do banco de dados...
+                                        <i class="fa-solid fa-spinner fa-spin me-2"></i> Carregando registros...
                                     </td>
                                 </tr>
                             </tbody>
@@ -567,44 +599,36 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
 
-    <!-- Firebase App & Firestore Scripts Modular SDK (v11) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            doc, 
-            setDoc, 
-            updateDoc, 
-            onSnapshot, 
-            serverTimestamp 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global Firebase Configuration fallback
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "demo-api-key",
-                authDomain: "demo-project.firebaseapp.com",
-                projectId: "demo-project",
-                storageBucket: "demo-project.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:abcdef123456"
-            };
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
+    <!-- Global App State & Utilities -->
+    <script>
+        // Global variables for fallback and state persistence
+        let db = null;
+        let auth = null;
         let currentUser = null;
+        let isFirebaseOnline = false;
         let activeSessionDocId = null;
         let sessionStartTime = null;
         let liveTimerInterval = null;
         let allLogsData = [];
+
+        // Hide loading screen safely
+        function hideLoadingScreen() {
+            const loader = document.getElementById('loading-screen');
+            if (loader) {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // Custom Modal display helper
+        function showCustomModal(title, msg) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            const modalEl = document.getElementById('customModal');
+            if (modalEl) {
+                const myModal = new bootstrap.Modal(modalEl);
+                myModal.show();
+            }
+        }
 
         // Audio System via Web Audio API
         let audioMuted = false;
@@ -633,7 +657,7 @@
                 osc.start(now);
                 osc.stop(now + 1.2);
             } catch (e) {
-                console.log("Audio not allowed yet:", e);
+                console.log("Audio play allowed on user gesture:", e);
             }
         }
 
@@ -648,35 +672,11 @@
             }
         };
 
-        // Custom Modal display helper
-        function showCustomModal(title, msg) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerText = msg;
-            const myModal = new bootstrap.Modal(document.getElementById('customModal'));
-            myModal.show();
-        }
-
-        // Authentication Setup
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
-                    currentUser = cred.user;
-                } else {
-                    const cred = await signInAnonymously(auth);
-                    currentUser = cred.user;
-                }
-                listenToFirestoreLogs();
-            } catch (err) {
-                console.error("Auth Exception:", err);
-            }
-        }
-
         // Zodiac Database Data Definitions
         const ZODIAC_DATA = [
             {
                 sign: "Áries",
-                icon: "fa-disease", // Abstract flame symbol
+                icon: "fa-fire",
                 start: [3, 21], end: [4, 19],
                 element: "Fogo", ruler: "Marte", quality: "Cardinal",
                 stone: "Diamante / Jaspe", color: "Vermelho Rubro", numbers: "7, 9, 18",
@@ -689,7 +689,7 @@
             },
             {
                 sign: "Touro",
-                icon: "fa-bullhorn",
+                icon: "fa-gem",
                 start: [4, 20], end: [5, 20],
                 element: "Terra", ruler: "Vênus", quality: "Fixo",
                 stone: "Esmeralda", color: "Verde Esmeralda", numbers: "6, 15, 24",
@@ -702,7 +702,7 @@
             },
             {
                 sign: "Gêmeos",
-                icon: "fa-masks-theater",
+                icon: "fa-comments",
                 start: [5, 21], end: [6, 20],
                 element: "Ar", ruler: "Mercúrio", quality: "Mutável",
                 stone: "Ágata", color: "Amarelo Vibrante", numbers: "5, 14, 23",
@@ -780,7 +780,7 @@
             },
             {
                 sign: "Sagitário",
-                icon: "fa-location-arrow",
+                icon: "fa-compass",
                 start: [11, 22], end: [12, 21],
                 element: "Fogo", ruler: "Júpiter", quality: "Mutável",
                 stone: "Turquesa", color: "Púrpura / Azul Real", numbers: "3, 12, 21",
@@ -793,7 +793,7 @@
             },
             {
                 sign: "Capricórnio",
-                icon: "fa-mountain-city",
+                icon: "fa-mountain",
                 start: [12, 22], end: [1, 19],
                 element: "Terra", ruler: "Saturno", quality: "Cardinal",
                 stone: "Granada", color: "Cinza Chumbo / Marrom", numbers: "4, 13, 22",
@@ -832,9 +832,8 @@
             }
         ];
 
-        // Determine Zodiac Sign based on Date
         function getZodiacSign(dateObj) {
-            const month = dateObj.getMonth() + 1; // 1-12
+            const month = dateObj.getMonth() + 1;
             const day = dateObj.getDate();
 
             for (const z of ZODIAC_DATA) {
@@ -845,10 +844,9 @@
                     return z;
                 }
             }
-            return ZODIAC_DATA[0]; // fallback Capricórnio
+            return ZODIAC_DATA[0];
         }
 
-        // Calculate exact age & days to next birthday
         function calculateBirthStats(birthDate) {
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
@@ -858,7 +856,6 @@
                 age--;
             }
 
-            // Next Birthday calculation
             const nextBday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
             if (today > nextBday) {
                 nextBday.setFullYear(today.getFullYear() + 1);
@@ -870,24 +867,117 @@
             return { age, daysToBday };
         }
 
-        // Format Date to readable Portuguese string
         function formatDateBR(dateObj) {
-            if (!dateObj) return '-';
+            if (!dateObj || isNaN(dateObj.getTime())) return '-';
             return dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
         function formatTimeBR(dateObj) {
-            if (!dateObj) return '-';
+            if (!dateObj || isNaN(dateObj.getTime())) return '-';
             return dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        // Process Zodiac Form Discovery
-        window.processZodiacDiscovery = async function() {
-            if (!currentUser) {
-                showCustomModal("Erro de Conexão", "Autenticando com o servidor de dados. Tente novamente em alguns segundos.");
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Render Logs Table with Local Memory / Firebase Sync
+        window.renderLogsTable = function() {
+            const filterInput = document.getElementById('filterInput');
+            const filterVal = (filterInput ? filterInput.value : '').toLowerCase();
+            const tbody = document.getElementById('logsTableBody');
+            if (!tbody) return;
+            
+            const filtered = allLogsData.filter(item => {
+                const nameMatch = (item.userName || '').toLowerCase().includes(filterVal);
+                const signMatch = (item.zodiacSign || '').toLowerCase().includes(filterVal);
+                return nameMatch || signMatch;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-white-50 py-4">
+                            Nenhum registro encontrado no banco de dados.
+                        </td>
+                    </tr>
+                `;
                 return;
             }
 
+            tbody.innerHTML = filtered.map(item => {
+                const entryDate = item.entryTime ? new Date(item.entryTime) : null;
+                const exitDate = item.exitTime ? new Date(item.exitTime) : null;
+                
+                const formattedEntry = entryDate ? `${formatDateBR(entryDate)} ${formatTimeBR(entryDate)}` : '-';
+                const formattedExit = exitDate ? `${formatTimeBR(exitDate)}` : (item.status === 'active' ? '<span class="badge bg-success">Em andamento</span>' : '-');
+                
+                const duration = item.durationSeconds 
+                    ? `${item.durationSeconds} seg` 
+                    : (item.status === 'active' ? 'Ativo...' : '-');
+
+                const statusBadge = item.status === 'active'
+                    ? '<span class="text-success"><span class="status-dot status-online"></span>Ativo</span>'
+                    : '<span class="text-white-50"><span class="status-dot status-offline"></span>Encerrado</span>';
+
+                return `
+                    <tr>
+                        <td><strong class="text-warning">${escapeHtml(item.userName || 'ds')}</strong></td>
+                        <td><span class="badge badge-element">${escapeHtml(item.zodiacSign || '-')}</span></td>
+                        <td>${item.birthDate ? formatDateBR(new Date(item.birthDate + 'T00:00:00')) : '-'}</td>
+                        <td class="small">${formattedEntry}</td>
+                        <td class="small">${formattedExit}</td>
+                        <td class="small">${duration}</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        function updateDashboardStats() {
+            const total = allLogsData.length;
+            const statTotal = document.getElementById('stat-total');
+            if (statTotal) statTotal.innerText = total;
+
+            if (total === 0) {
+                document.getElementById('stat-avg-age').innerText = '0 anos';
+                document.getElementById('stat-top-sign').innerText = '-';
+                document.getElementById('stat-closed-sessions').innerText = '0';
+                return;
+            }
+
+            const sumAge = allLogsData.reduce((acc, curr) => acc + (curr.age || 0), 0);
+            const avgAge = Math.round(sumAge / total);
+            document.getElementById('stat-avg-age').innerText = `${avgAge} anos`;
+
+            const signCounts = {};
+            let closedCount = 0;
+
+            allLogsData.forEach(item => {
+                if (item.zodiacSign) {
+                    signCounts[item.zodiacSign] = (signCounts[item.zodiacSign] || 0) + 1;
+                }
+                if (item.status === 'closed') {
+                    closedCount++;
+                }
+            });
+
+            let topSign = '-';
+            let maxCount = 0;
+            for (const [sign, count] of Object.entries(signCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    topSign = sign;
+                }
+            }
+
+            document.getElementById('stat-top-sign').innerText = topSign;
+            document.getElementById('stat-closed-sessions').innerText = closedCount;
+        }
+
+        // Discovery calculation and session start
+        window.processZodiacDiscovery = async function() {
             const name = document.getElementById('userName').value.trim() || 'ds';
             const dobString = document.getElementById('birthDate').value;
             const tobString = document.getElementById('birthTime').value || 'Não informada';
@@ -897,7 +987,6 @@
                 return;
             }
 
-            // Play chime sound
             playCosmicChime();
 
             const birthDateParts = dobString.split('-');
@@ -938,16 +1027,14 @@
             document.getElementById('audit-session-status').className = 'badge bg-success';
             document.getElementById('audit-session-status').innerText = 'Ativa';
 
-            // Show result view
             document.getElementById('form-container').classList.add('d-none');
             document.getElementById('result-container').classList.remove('d-none');
 
-            // Save Session and Log into Firestore (Public logs collection)
             activeSessionDocId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
             
             const logData = {
                 id: activeSessionDocId,
-                uid: currentUser.uid,
+                uid: currentUser ? currentUser.uid : 'anon_user',
                 userName: name,
                 birthDate: dobString,
                 birthTime: tobString,
@@ -961,214 +1048,193 @@
                 exitTime: null,
                 durationSeconds: 0,
                 status: 'active',
-                timestamp: serverTimestamp()
+                timestamp: new Date().toISOString()
             };
 
-            try {
-                // Rule 1 strictly followed
-                const logRef = doc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
-                await setDoc(logRef, logData);
+            // Local fallback array insertion
+            allLogsData.unshift(logData);
+            renderLogsTable();
+            updateDashboardStats();
 
-                // Start Live Timer for active duration
-                if (liveTimerInterval) clearInterval(liveTimerInterval);
-                liveTimerInterval = setInterval(() => {
-                    if (!sessionStartTime) return;
-                    const secs = Math.floor((new Date() - sessionStartTime) / 1000);
-                    document.getElementById('audit-timer').innerText = `(${secs}s de navegação)`;
-                }, 1000);
-
-            } catch (err) {
-                console.error("Error writing to Firestore:", err);
+            // Sync with Firebase if available
+            if (isFirebaseOnline && window.firebaseSetDoc) {
+                try {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
+                    const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
+                    await window.firebaseSetDoc(logRef, {
+                        ...logData,
+                        timestamp: window.firebaseServerTimestamp()
+                    });
+                } catch (err) {
+                    console.warn("Firestore write error, relying on local state:", err);
+                }
             }
+
+            // Start Live Timer
+            if (liveTimerInterval) clearInterval(liveTimerInterval);
+            liveTimerInterval = setInterval(() => {
+                if (!sessionStartTime) return;
+                const secs = Math.floor((new Date() - sessionStartTime) / 1000);
+                document.getElementById('audit-timer').innerText = `(${secs}s de navegação)`;
+            }, 1000);
         };
 
-        // Explicitly close session
-        window.closeSessionExplicitly = async function() {
-            if (!activeSessionDocId || !sessionStartTime) {
-                resetForm();
-                return;
-            }
+        // Close Session
+        window.closeSessionExplicitly = async function(isNewQuery) {
+            if (activeSessionDocId && sessionStartTime) {
+                const exitTime = new Date();
+                const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
 
-            const exitTime = new Date();
-            const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
+                // Update local memory
+                const localItem = allLogsData.find(item => item.id === activeSessionDocId);
+                if (localItem) {
+                    localItem.exitTime = exitTime.toISOString();
+                    localItem.durationSeconds = durationSecs;
+                    localItem.status = 'closed';
+                }
 
-            try {
-                const logRef = doc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
-                await updateDoc(logRef, {
-                    exitTime: exitTime.toISOString(),
-                    durationSeconds: durationSecs,
-                    status: 'closed'
-                });
-            } catch (e) {
-                console.error("Error updating exit session:", e);
+                // Update Firestore if available
+                if (isFirebaseOnline && window.firebaseUpdateDoc) {
+                    try {
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
+                        const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
+                        await window.firebaseUpdateDoc(logRef, {
+                            exitTime: exitTime.toISOString(),
+                            durationSeconds: durationSecs,
+                            status: 'closed'
+                        });
+                    } catch (e) {
+                        console.warn("Firestore update exit failed:", e);
+                    }
+                }
+
+                renderLogsTable();
+                updateDashboardStats();
             }
 
             if (liveTimerInterval) clearInterval(liveTimerInterval);
             activeSessionDocId = null;
             sessionStartTime = null;
 
-            showCustomModal("Sessão Encerrada", "Sua saída foi devidamente registrada no banco de dados Firestore com o tempo total de navegação.");
+            if (!isNewQuery) {
+                showCustomModal("Sessão Encerrada", "Sua saída foi devidamente registrada no banco de dados com o tempo total de navegação.");
+            }
             resetForm();
         };
 
-        // Listen for tab window closure or unload to log exit time automatically
-        window.addEventListener('beforeunload', () => {
-            if (activeSessionDocId && sessionStartTime) {
-                const exitTime = new Date();
-                const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
-                const logRef = doc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
-                
-                // Fire and forget update
-                updateDoc(logRef, {
-                    exitTime: exitTime.toISOString(),
-                    durationSeconds: durationSecs,
-                    status: 'closed'
-                }).catch(() => {});
-            }
-        });
-
-        // Reset UI Form
         window.resetForm = function() {
             if (liveTimerInterval) clearInterval(liveTimerInterval);
             document.getElementById('form-container').classList.remove('d-none');
             document.getElementById('result-container').classList.add('d-none');
         };
 
-        // Realtime Subscription to Logs Table
-        function listenToFirestoreLogs() {
-            if (!currentUser) return;
-
-            // Simple collection query as per Rule 2
-            const logsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs');
-            
-            onSnapshot(logsCollection, (snapshot) => {
-                allLogsData = [];
-                snapshot.forEach(docSnap => {
-                    allLogsData.push(docSnap.data());
-                });
-
-                // Sort in JS memory (Rule 2) descending by entryTime
-                allLogsData.sort((a, b) => new Date(b.entryTime || 0) - new Date(a.entryTime || 0));
-
-                renderLogsTable();
-                updateDashboardStats();
-            }, (error) => {
-                console.error("Firestore Listen Error:", error);
-                document.getElementById('logsTableBody').innerHTML = `
-                    <tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados do servidor.</td></tr>
-                `;
-            });
-        }
-
-        // Render Logs Table
-        window.renderLogsTable = function() {
-            const filterVal = (document.getElementById('filterInput').value || '').toLowerCase();
-            const tbody = document.getElementById('logsTableBody');
-            
-            const filtered = allLogsData.filter(item => {
-                const nameMatch = (item.userName || '').toLowerCase().includes(filterVal);
-                const signMatch = (item.zodiacSign || '').toLowerCase().includes(filterVal);
-                return nameMatch || signMatch;
-            });
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center text-white-50 py-4">
-                            Nenhum registro encontrado no banco de dados.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(item => {
-                const entryDate = item.entryTime ? new Date(item.entryTime) : null;
-                const exitDate = item.exitTime ? new Date(item.exitTime) : null;
-                
-                const formattedEntry = entryDate ? `${formatDateBR(entryDate)} ${formatTimeBR(entryDate)}` : '-';
-                const formattedExit = exitDate ? `${formatTimeBR(exitDate)}` : (item.status === 'active' ? '<span class="badge bg-success">Em andamento</span>' : '-');
-                
-                const duration = item.durationSeconds 
-                    ? `${item.durationSeconds} seg` 
-                    : (item.status === 'active' ? 'Ativo...' : '-');
-
-                const statusBadge = item.status === 'active'
-                    ? '<span class="text-success"><span class="status-dot status-online"></span>Ativo</span>'
-                    : '<span class="text-white-50"><span class="status-dot status-offline"></span>Encerrado</span>';
-
-                return `
-                    <tr>
-                        <td><strong class="text-warning">${escapeHtml(item.userName || 'ds')}</strong></td>
-                        <td><span class="badge badge-element">${escapeHtml(item.zodiacSign || '-')}</span></td>
-                        <td>${item.birthDate ? formatDateBR(new Date(item.birthDate)) : '-'}</td>
-                        <td class="small">${formattedEntry}</td>
-                        <td class="small">${formattedExit}</td>
-                        <td class="small">${duration}</td>
-                        <td>${statusBadge}</td>
-                    </tr>
-                `;
-            }).join('');
-        };
-
-        // Update Dashboard Analytics Cards
-        function updateDashboardStats() {
-            const total = allLogsData.length;
-            document.getElementById('stat-total').innerText = total;
-
-            if (total === 0) {
-                document.getElementById('stat-avg-age').innerText = '0 anos';
-                document.getElementById('stat-top-sign').innerText = '-';
-                document.getElementById('stat-closed-sessions').innerText = '0';
-                return;
-            }
-
-            // Average Age
-            const sumAge = allLogsData.reduce((acc, curr) => acc + (curr.age || 0), 0);
-            const avgAge = Math.round(sumAge / total);
-            document.getElementById('stat-avg-age').innerText = `${avgAge} anos`;
-
-            // Top Sign
-            const signCounts = {};
-            let closedCount = 0;
-
-            allLogsData.forEach(item => {
-                if (item.zodiacSign) {
-                    signCounts[item.zodiacSign] = (signCounts[item.zodiacSign] || 0) + 1;
+        window.addEventListener('beforeunload', () => {
+            if (activeSessionDocId && sessionStartTime) {
+                const exitTime = new Date();
+                const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
+                if (isFirebaseOnline && window.firebaseUpdateDoc) {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
+                    const logRef = window.firebaseDoc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
+                    window.firebaseUpdateDoc(logRef, {
+                        exitTime: exitTime.toISOString(),
+                        durationSeconds: durationSecs,
+                        status: 'closed'
+                    }).catch(() => {});
                 }
-                if (item.status === 'closed') {
-                    closedCount++;
-                }
-            });
-
-            let topSign = '-';
-            let maxCount = 0;
-            for (const [sign, count] of Object.entries(signCounts)) {
-                if (count > maxCount) {
-                    maxCount = count;
-                    topSign = sign;
-                }
-            }
-
-            document.getElementById('stat-top-sign').innerText = topSign;
-            document.getElementById('stat-closed-sessions').innerText = closedCount;
-        }
-
-        // HTML Escape utility
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        // Initialize Auth on window load
-        window.addEventListener('load', () => {
-            initAuth();
-
-            // Set default date picker to a reasonable default (e.g., year 2000)
-            const birthInput = document.getElementById('birthDate');
-            if (birthInput && !birthInput.value) {
-                birthInput.value = '2000-01-01';
             }
         });
+    </script>
+
+    <!-- Modular Firebase SDK script with fallback -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            setDoc, 
+            updateDoc, 
+            onSnapshot, 
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Expose Firebase functions globally for main script
+        window.firebaseDoc = doc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseUpdateDoc = updateDoc;
+        window.firebaseServerTimestamp = serverTimestamp;
+
+        async function initFirebase() {
+            try {
+                const firebaseConfig = typeof __firebase_config !== 'undefined' 
+                    ? JSON.parse(__firebase_config) 
+                    : {
+                        apiKey: "demo-api-key",
+                        authDomain: "demo-project.firebaseapp.com",
+                        projectId: "demo-project",
+                        storageBucket: "demo-project.appspot.com",
+                        messagingSenderId: "123456789",
+                        appId: "1:123456789:web:abcdef123456"
+                    };
+
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
+
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = cred.user;
+                } else {
+                    const cred = await signInAnonymously(auth);
+                    currentUser = cred.user;
+                }
+
+                isFirebaseOnline = true;
+                const statusBadge = document.getElementById('connection-status-badge');
+                if (statusBadge) {
+                    statusBadge.className = 'badge bg-success opacity-90';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-cloud me-1"></i> Firestore Realtime ON';
+                }
+
+                // Listen to logs
+                const logsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs');
+                onSnapshot(logsCollection, (snapshot) => {
+                    const remoteLogs = [];
+                    snapshot.forEach(docSnap => {
+                        remoteLogs.push(docSnap.data());
+                    });
+                    
+                    remoteLogs.sort((a, b) => new Date(b.entryTime || 0) - new Date(a.entryTime || 0));
+                    allLogsData = remoteLogs;
+
+                    renderLogsTable();
+                    updateDashboardStats();
+                }, (error) => {
+                    console.warn("Firestore snapshot listener error:", error);
+                });
+
+            } catch (err) {
+                console.warn("Firebase failed to initialize. Falling back to local offline state:", err);
+                isFirebaseOnline = false;
+                const statusBadge = document.getElementById('connection-status-badge');
+                if (statusBadge) {
+                    statusBadge.className = 'badge bg-warning text-dark';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-hard-drive me-1"></i> Modo Local Operacional';
+                }
+            } finally {
+                hideLoadingScreen();
+            }
+        }
+
+        // Initialize Firebase on DOM readiness
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFirebase);
+        } else {
+            initFirebase();
+        }
     </script>
 
     <!-- Canvas Galaxy Particle Animation Script -->
@@ -1262,7 +1328,6 @@
         function animateGalaxy() {
             ctx.clearRect(0, 0, width, height);
 
-            // Subtle dark galactic gradient glow
             const radialGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, Math.max(width, height));
             radialGrad.addColorStop(0, 'rgba(30, 24, 68, 0.4)');
             radialGrad.addColorStop(0.6, 'rgba(15, 11, 38, 0.8)');
@@ -1281,11 +1346,23 @@
             requestAnimationFrame(animateGalaxy);
         }
 
-        window.onload = function() {
+        window.addEventListener('load', () => {
             resizeCanvas();
             initStars();
             animateGalaxy();
-        };
+
+            // Backup timer to guarantee loading screen removal
+            setTimeout(hideLoadingScreen, 1500);
+
+            // Default birthdate input
+            const birthInput = document.getElementById('birthDate');
+            if (birthInput && !birthInput.value) {
+                birthInput.value = '2000-01-01';
+            }
+
+            renderLogsTable();
+            updateDashboardStats();
+        });
     </script>
 </body>
 </html>
