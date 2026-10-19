@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oráculo Zodíaco Profissional - Revelação Astral & Auditoria Realtime</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold-primary: #dfb76c;
+            --gold-light: #f3e5ab;
+            --gold-glow: rgba(223, 183, 108, 0.4);
+            --bg-dark: #090714;
+            --purple-deep: #120e29;
+            --purple-card: rgba(30, 27, 75, 0.65);
+            --glass-border: rgba(223, 183, 108, 0.25);
+            --text-light: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas Galactic Background */
+        #galaxy-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .relative-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, .font-cinzel {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #dfb76c 50%, #f3e5ab 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--purple-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 15px rgba(223, 183, 108, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(223, 183, 108, 0.45);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 25px rgba(223, 183, 108, 0.2);
+        }
+
+        /* Glowing Custom Buttons */
+        .btn-gold {
+            background: linear-gradient(135deg, #c59b43 0%, #dfb76c 50%, #f3e5ab 100%);
+            color: #0d0a21;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 28px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 15px var(--gold-glow);
+            transition: all 0.3s ease;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 25px rgba(223, 183, 108, 0.8);
+            color: #000;
+        }
+
+        .btn-outline-gold {
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-light);
+            border-radius: 50px;
+            background: rgba(223, 183, 108, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-gold:hover {
+            background: var(--gold-primary);
+            color: #0d0a21;
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        /* Form Controls */
+        .form-control-mystic {
+            background: rgba(15, 12, 36, 0.7);
+            border: 1px solid rgba(223, 183, 108, 0.3);
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px 18px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control-mystic:focus {
+            background: rgba(20, 16, 48, 0.9);
+            border-color: var(--gold-primary);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(223, 183, 108, 0.3);
+        }
+
+        .form-control-mystic::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Navigation Tabs */
+        .nav-pills-mystic .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 30px;
+            padding: 10px 22px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .nav-pills-mystic .nav-link.active {
+            background: linear-gradient(135deg, rgba(223, 183, 108, 0.25) 0%, rgba(30, 27, 75, 0.8) 100%);
+            color: var(--gold-light);
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 15px rgba(223, 183, 108, 0.2);
+        }
+
+        /* Badge Styles */
+        .badge-element {
+            background: rgba(223, 183, 108, 0.15);
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-light);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        /* Audio Controls floating */
+        .audio-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(18, 14, 41, 0.8);
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-primary);
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--gold-glow);
+            transition: all 0.3s ease;
+        }
+
+        .audio-toggle:hover {
+            transform: scale(1.1);
+            background: var(--gold-primary);
+            color: #120e29;
+        }
+
+        /* Pulsing Status Dot */
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-online {
+            background-color: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .status-offline {
+            background-color: #6b7280;
+        }
+
+        /* Table Customizations */
+        .table-mystic {
+            color: #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .table-mystic th {
+            background: rgba(15, 11, 38, 0.8);
+            color: var(--gold-primary);
+            border-bottom: 1px solid var(--glass-border);
+            font-family: 'Cinzel', serif;
+        }
+
+        .table-mystic td {
+            border-bottom: 1px solid rgba(223, 183, 108, 0.1);
+            background: rgba(20, 16, 48, 0.3);
+        }
+
+        .table-mystic tr:hover td {
+            background: rgba(223, 183, 108, 0.08);
+        }
+
+        /* Custom Modal styling */
+        .modal-content-mystic {
+            background: #120e29;
+            border: 1px solid var(--gold-primary);
+            color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Galactic Interactive Canvas -->
+    <canvas id="galaxy-canvas"></canvas>
+
+    <!-- Main Container -->
+    <div class="container py-4 relative-content">
+        
+        <!-- Navbar / Header -->
+        <header class="d-flex flex-wrap justify-content-between align-items-center py-3 mb-4 border-bottom border-secondary border-opacity-25">
+            <div class="d-flex align-items-center mb-2 mb-md-0">
+                <i class="fa-solid font-cinzel fa-star-and-crescent fs-2 text-warning me-3"></i>
+                <span class="fs-3 font-cinzel gold-gradient-text fw-bold">ORÁCULO ZODÍACO</span>
+            </div>
+            
+            <ul class="nav nav-pills nav-pills-mystic" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-consult-btn" data-bs-toggle="pill" data-bs-target="#tab-consult" type="button" role="tab">
+                        <i class="fa-solid fa-compass me-2"></i>Consulta Astral
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-logs-btn" data-bs-toggle="pill" data-bs-target="#tab-logs" type="button" role="tab">
+                        <i class="fa-solid fa-database me-2"></i>Logs Realtime & BD
+                    </button>
+                </li>
+            </ul>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <div class="tab-content" id="mainTabsContent">
+            
+            <!-- SECTION 1: CONSULTA ASTRAL (FORM + RESULT) -->
+            <div class="tab-pane fade show active" id="tab-consult" role="tabpanel">
+                
+                <!-- Input Form Card -->
+                <div id="form-container" class="row justify-content-center my-4">
+                    <div class="col-lg-7 col-md-9">
+                        <div class="glass-card p-4 p-md-5">
+                            <div class="text-center mb-4">
+                                <span class="badge badge-element mb-2"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revelação Instantânea</span>
+                                <h2 class="font-cinzel gold-gradient-text">Descubra Seu Destino Zodiacal</h2>
+                                <p class="text-white-50 fs-6">Insira seus dados para calcular a alinhamento das estrelas e registrar sua sessão no mapa astral.</p>
+                            </div>
+
+                            <form id="zodiacForm" onsubmit="event.preventDefault(); processZodiacDiscovery();">
+                                <div class="mb-3">
+                                    <label for="userName" class="form-label text-warning font-cinzel"><i class="fa-solid fa-user me-2"></i>Seu Nome / Apelido</label>
+                                    <input type="text" class="form-control form-control-mystic" id="userName" value="ds" required placeholder="Digite seu nome">
+                                </div>
+
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-7">
+                                        <label for="birthDate" class="form-label text-warning font-cinzel"><i class="fa-solid fa-calendar-days me-2"></i>Data de Nascimento</label>
+                                        <input type="date" class="form-control form-control-mystic" id="birthDate" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label for="birthTime" class="form-label text-warning font-cinzel"><i class="fa-solid fa-clock me-2"></i>Hora Nasc. (Opcional)</label>
+                                        <input type="time" class="form-control form-control-mystic" id="birthTime">
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-gold w-100 py-3 text-uppercase font-cinzel">
+                                    <i class="fa-solid fa-gem me-2"></i> Descobrir Meu Signo & Revelar Destino
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result Container (Initially Hidden) -->
+                <div id="result-container" class="d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <button class="btn btn-outline-gold px-4" onclick="resetForm()">
+                            <i class="fa-solid fa-arrow-left me-2"></i> Nova Consulta
+                        </button>
+                        <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="closeSessionExplicitly()">
+                            <i class="fa-solid fa-power-off me-1"></i> Encerrar Sessão / Registrar Saída
+                        </button>
+                    </div>
+
+                    <!-- Astral Banner Header -->
+                    <div class="glass-card p-4 mb-4 text-center">
+                        <h2 class="font-cinzel text-white mb-2">Mapa Astral Revelado para <span id="res-user-name" class="gold-gradient-text"></span></h2>
+                        <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap mt-3">
+                            <span class="badge badge-element fs-6"><i class="fa-solid fa-fire-flame-curated me-1"></i> Elemento: <strong id="res-element"></strong></span>
+                            <span class="badge badge-element fs-6"><i class="fa-solid fa-planet-ringed me-1"></i> Regente: <strong id="res-ruler"></strong></span>
+                            <span class="badge badge-element fs-6"><i class="fa-solid fa-dharmachakra me-1"></i> Qualidade: <strong id="res-quality"></strong></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Left Main Sign Card -->
+                        <div class="col-lg-4">
+                            <div class="glass-card p-4 text-center h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="my-3">
+                                        <i id="res-icon" class="fa-solid fa-sun display-1 text-warning"></i>
+                                    </div>
+                                    <h1 id="res-sign-name" class="font-cinzel gold-gradient-text display-5 fw-bold mb-1"></h1>
+                                    <p id="res-sign-dates" class="text-white-50 fs-6 mb-3"></p>
+                                    <hr class="border-secondary border-opacity-50">
+                                </div>
+
+                                <ul class="list-group list-group-flush text-start bg-transparent">
+                                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary border-opacity-25">
+                                        <span><i class="fa-solid fa-gem text-warning me-2"></i>Pedra da Sorte:</span>
+                                        <strong id="res-stone" class="text-warning"></strong>
+                                    </li>
+                                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary border-opacity-25">
+                                        <span><i class="fa-solid fa-palette text-warning me-2"></i>Cor da Sorte:</span>
+                                        <strong id="res-color" class="text-warning"></strong>
+                                    </li>
+                                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary border-opacity-25">
+                                        <span><i class="fa-solid fa-hashtag text-warning me-2"></i>Números da Sorte:</span>
+                                        <strong id="res-numbers" class="text-warning"></strong>
+                                    </li>
+                                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary border-opacity-25">
+                                        <span><i class="fa-solid fa-heart text-danger me-2"></i>Compatibilidade:</span>
+                                        <strong id="res-compat" class="text-warning"></strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Right Tabs Details -->
+                        <div class="col-lg-8">
+                            <div class="glass-card p-4 h-100">
+                                <!-- Inner Tab Nav -->
+                                <ul class="nav nav-tabs border-secondary border-opacity-25 mb-3" id="signDetailTabs" role="tablist">
+                                    <li class="nav-item">
+                                        <button class="nav-link active text-warning font-cinzel" id="traits-tab" data-bs-toggle="tab" data-bs-target="#traits-pane" type="button">
+                                            <i class="fa-solid fa-user-astronaut me-1"></i> Perfil & Traços
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link text-warning font-cinzel" id="love-tab" data-bs-toggle="tab" data-bs-target="#love-pane" type="button">
+                                            <i class="fa-solid fa-hand-holding-heart me-1"></i> Amor & Carreira
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link text-warning font-cinzel" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit-pane" type="button">
+                                            <i class="fa-solid fa-shield-halved me-1"></i> Análise da Sessão (Database)
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content pt-2" id="signDetailTabsContent">
+                                    <!-- Traços -->
+                                    <div class="tab-pane fade show active" id="traits-pane" role="tabpanel">
+                                        <h4 class="font-cinzel text-warning mb-3">Essência Astral & Personalidade</h4>
+                                        <p id="res-description" class="lh-lg text-white-80"></p>
+                                        <div class="row g-3 mt-2">
+                                            <div class="col-md-6">
+                                                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-success border-opacity-25">
+                                                    <h6 class="text-success font-cinzel"><i class="fa-solid fa-thumbs-up me-1"></i> Pontos Fortes</h6>
+                                                    <p id="res-strengths" class="small mb-0 text-white-50"></p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-danger border-opacity-25">
+                                                    <h6 class="text-danger font-cinzel"><i class="fa-solid fa-triangle-exclamation me-1"></i> Desafios</h6>
+                                                    <p id="res-weaknesses" class="small mb-0 text-white-50"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Amor e Carreira -->
+                                    <div class="tab-pane fade" id="love-pane" role="tabpanel">
+                                        <h4 class="font-cinzel text-warning mb-3">Relacionamentos & Vida Profissional</h4>
+                                        <div class="mb-4">
+                                            <h6 class="text-info font-cinzel"><i class="fa-solid fa-heart me-2"></i>No Amor</h6>
+                                            <p id="res-love-text" class="lh-lg text-white-80"></p>
+                                        </div>
+                                        <div>
+                                            <h6 class="text-success font-cinzel"><i class="fa-solid fa-briefcase me-2"></i>Na Carreira & Finanças</h6>
+                                            <p id="res-career-text" class="lh-lg text-white-80"></p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Análise da Sessão (BD Audit) -->
+                                    <div class="tab-pane fade" id="audit-pane" role="tabpanel">
+                                        <h4 class="font-cinzel text-warning mb-3">Registro de Auditoria da Consulta</h4>
+                                        <p class="small text-white-50">Dados computados e sincronizados em tempo real no banco de dados Firebase Firestore:</p>
+                                        
+                                        <div class="row g-3 mt-1">
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <span class="text-white-50 d-block small">Data de Nascimento:</span>
+                                                    <strong id="audit-dob" class="fs-6 text-light"></strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <span class="text-white-50 d-block small">Hora de Nascimento:</span>
+                                                    <strong id="audit-tob" class="fs-6 text-light"></strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <span class="text-white-50 d-block small">Idade Atual:</span>
+                                                    <strong id="audit-age" class="fs-6 text-warning"></strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <span class="text-white-50 d-block small">Próximo Aniversário:</span>
+                                                    <strong id="audit-next-bday" class="fs-6 text-info"></strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <span class="text-white-50 d-block small">Hora do Acesso (Entrada):</span>
+                                                    <strong id="audit-entry-time" class="fs-6 text-success"></strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-dark bg-opacity-60 rounded border border-secondary border-opacity-25">
+                                                    <span class="text-white-50 d-block small">Status da Sessão:</span>
+                                                    <span id="audit-session-status" class="badge bg-success">Ativa</span>
+                                                    <small id="audit-timer" class="ms-2 text-white-50">(0s)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECTION 2: BANCO DE DADOS & LOGS EM TEMPO REAL -->
+            <div class="tab-pane fade" id="tab-logs" role="tabpanel">
+                
+                <!-- Stat Dashboard Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="glass-card p-3 text-center">
+                            <span class="text-white-50 small d-block mb-1"><i class="fa-solid fa-users me-1"></i> Total Consultas</span>
+                            <h3 id="stat-total" class="gold-gradient-text font-cinzel mb-0">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="glass-card p-3 text-center">
+                            <span class="text-white-50 small d-block mb-1"><i class="fa-solid fa-calculator me-1"></i> Média de Idade</span>
+                            <h3 id="stat-avg-age" class="gold-gradient-text font-cinzel mb-0">0 anos</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="glass-card p-3 text-center">
+                            <span class="text-white-50 small d-block mb-1"><i class="fa-solid fa-crown me-1"></i> Signo Mais Frequente</span>
+                            <h3 id="stat-top-sign" class="gold-gradient-text font-cinzel mb-0">-</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="glass-card p-3 text-center">
+                            <span class="text-white-50 small d-block mb-1"><i class="fa-solid fa-right-from-bracket me-1"></i> Sessões Encerradas</span>
+                            <h3 id="stat-closed-sessions" class="gold-gradient-text font-cinzel mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Table -->
+                <div class="glass-card p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                        <h4 class="font-cinzel gold-gradient-text mb-0"><i class="fa-solid fa-list-check me-2"></i> Registros de Acesso Firestore</h4>
+                        
+                        <div class="d-flex gap-2 flex-grow-1 flex-md-grow-0" style="min-width: 280px;">
+                            <input type="text" id="filterInput" class="form-control form-control-mystic form-control-sm" placeholder="Filtrar por nome ou signo..." oninput="renderLogsTable()">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-mystic table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Signo</th>
+                                    <th>Data Nasc.</th>
+                                    <th>Hora Entrada</th>
+                                    <th>Hora Saída</th>
+                                    <th>Duração</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-white-50">
+                                        <i class="fa-solid fa-spinner fa-spin me-2"></i> Carregando registros do banco de dados...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Audio Toggle Button -->
+    <button class="audio-toggle" id="audioToggleBtn" onclick="toggleAudio()" title="Ativar/Desativar Sons Cósmicos">
+        <i class="fa-solid fa-volume-high" id="audioIcon"></i>
+    </button>
+
+    <!-- Custom Modal Message Container -->
+    <div class="modal fade" id="customModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-content-mystic">
+                <div class="modal-header border-secondary border-opacity-25">
+                    <h5 class="modal-title font-cinzel text-warning" id="modalTitle">Aviso Astral</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body fs-6" id="modalMessage"></div>
+                <div class="modal-footer border-secondary border-opacity-25">
+                    <button type="button" class="btn btn-gold rounded-pill px-4" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
+
+    <!-- Firebase App & Firestore Scripts Modular SDK (v11) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            setDoc, 
+            updateDoc, 
+            onSnapshot, 
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase Configuration fallback
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "demo-api-key",
+                authDomain: "demo-project.firebaseapp.com",
+                projectId: "demo-project",
+                storageBucket: "demo-project.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef123456"
+            };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'zodiac-oracle-default';
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let activeSessionDocId = null;
+        let sessionStartTime = null;
+        let liveTimerInterval = null;
+        let allLogsData = [];
+
+        // Audio System via Web Audio API
+        let audioMuted = false;
+        let audioCtx = null;
+
+        function playCosmicChime() {
+            if (audioMuted) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(528, now); // Solfeggio frequency 528Hz
+                osc.frequency.exponentialRampToValueAtTime(1056, now + 0.8);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 1.2);
+            } catch (e) {
+                console.log("Audio not allowed yet:", e);
+            }
+        }
+
+        window.toggleAudio = function() {
+            audioMuted = !audioMuted;
+            const icon = document.getElementById('audioIcon');
+            if (audioMuted) {
+                icon.className = 'fa-solid fa-volume-xmark';
+            } else {
+                icon.className = 'fa-solid fa-volume-high';
+                playCosmicChime();
+            }
+        };
+
+        // Custom Modal display helper
+        function showCustomModal(title, msg) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            const myModal = new bootstrap.Modal(document.getElementById('customModal'));
+            myModal.show();
+        }
+
+        // Authentication Setup
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = cred.user;
+                } else {
+                    const cred = await signInAnonymously(auth);
+                    currentUser = cred.user;
+                }
+                listenToFirestoreLogs();
+            } catch (err) {
+                console.error("Auth Exception:", err);
+            }
+        }
+
+        // Zodiac Database Data Definitions
+        const ZODIAC_DATA = [
+            {
+                sign: "Áries",
+                icon: "fa-disease", // Abstract flame symbol
+                start: [3, 21], end: [4, 19],
+                element: "Fogo", ruler: "Marte", quality: "Cardinal",
+                stone: "Diamante / Jaspe", color: "Vermelho Rubro", numbers: "7, 9, 18",
+                compat: "Leão, Sagitário, Gêmeos",
+                description: "Pioneiro, corajoso e cheio de energia. Áries lidera com paixão indomável e entusiasmo contagioso.",
+                strengths: "Liderança nata, determinação, honestidade direta, iniciativa indomável.",
+                weaknesses: "Impaciência, impulsividade, pavio curto.",
+                love: "Apaixona-se intensamente e busca parceiros independentes e cheios de vida.",
+                career: "Excelente em cargos de comando, empreendedorismo e projetos desafiadores."
+            },
+            {
+                sign: "Touro",
+                icon: "fa-bullhorn",
+                start: [4, 20], end: [5, 20],
+                element: "Terra", ruler: "Vênus", quality: "Fixo",
+                stone: "Esmeralda", color: "Verde Esmeralda", numbers: "6, 15, 24",
+                compat: "Virgem, Capricórnio, Câncer",
+                description: "Leal, paciente e pragmático. Touro valoriza a estabilidade, os prazeres sensoriais e o conforto da vida.",
+                strengths: "Persistência inabalável, confiabilidade, senso estético primoroso.",
+                weaknesses: "Teimosia rígida, resistência a mudanças repentinas.",
+                love: "Procura conexões duradouras, segurança emocional e momentos de carinho e aconchego.",
+                career: "Sobressai-se no setor financeiro, arquitetura, culinária e gestão de negócios."
+            },
+            {
+                sign: "Gêmeos",
+                icon: "fa-masks-theater",
+                start: [5, 21], end: [6, 20],
+                element: "Ar", ruler: "Mercúrio", quality: "Mutável",
+                stone: "Ágata", color: "Amarelo Vibrante", numbers: "5, 14, 23",
+                compat: "Libra, Aquário, Áries",
+                description: "Curioso, versátil e mestre da comunicação. Gêmeos conecta ideias e pessoas com leveza e inteligência.",
+                strengths: "Adaptabilidade rápida, perspicácia mental, carisma social.",
+                weaknesses: "Inconstância, dispersão de foco.",
+                love: "Conectado pela estimulação intelectual; precisa de conversas profundas e diversão constante.",
+                career: "Brilha no jornalismo, marketing, ensino e tecnologia."
+            },
+            {
+                sign: "Câncer",
+                icon: "fa-moon",
+                start: [6, 21], end: [7, 22],
+                element: "Água", ruler: "Lua", quality: "Cardinal",
+                stone: "Pedra da Lua", color: "Prata / Branco", numbers: "2, 11, 20",
+                compat: "Escorpião, Peixes, Touro",
+                description: "Intuitivo, protetor e profundamente empático. Câncer guarda suas memórias e cuida de quem ama com devoção.",
+                strengths: "Intuição aguçada, lealdade profunda, inteligência emocional.",
+                weaknesses: "Hipersensibilidade, apego excessivo ao passado.",
+                love: "Busca um porto seguro e entrega de alma inteira em relacionamentos sinceros.",
+                career: "Destaca-se em psicologia, recursos humanos, saúde e artes visuais."
+            },
+            {
+                sign: "Leão",
+                icon: "fa-sun",
+                start: [7, 23], end: [8, 22],
+                element: "Fogo", ruler: "Sol", quality: "Fixo",
+                stone: "Rubi", color: "Dourado / Amarelo", numbers: "1, 10, 19",
+                compat: "Áries, Sagitário, Libra",
+                description: "Generoso, radiante e majestoso. Leão ilumina os ambientes e inspira todos ao seu redor a brilharem.",
+                strengths: "Magnetismo natural, nobreza de caráter, otimismo contagiante.",
+                weaknesses: "Orgulho elevado, necessidade contínua de validação.",
+                love: "Dramático e romântico, adora gestos grandiosos e demonstrações de carinho público.",
+                career: "Ideal para liderança executiva, artes cênicas, entretenimento e relações públicas."
+            },
+            {
+                sign: "Virgem",
+                icon: "fa-wheat-awn",
+                start: [8, 23], end: [9, 22],
+                element: "Terra", ruler: "Mercúrio", quality: "Mutável",
+                stone: "Safira Azul", color: "Azul Marinho / Bege", numbers: "5, 14, 32",
+                compat: "Touro, Capricórnio, Câncer",
+                description: "Analítico, dedicado e perfeitamente organizado. Virgem busca constante aprimoramento e utilidade real.",
+                strengths: "Atenção cirúrgica aos detalhes, dedicação ao trabalho, praticidade.",
+                weaknesses: "Perfeccionismo excessivo, autocrítica rigorosa.",
+                love: "Demonstra amor através de atos práticos de serviço e cuidado no dia a dia.",
+                career: "Excelente em análise de dados, medicina, ciência e auditorias."
+            },
+            {
+                sign: "Libra",
+                icon: "fa-scale-balanced",
+                start: [9, 23], end: [10, 22],
+                element: "Ar", ruler: "Vênus", quality: "Cardinal",
+                stone: "Quartzo Rosa", color: "Rosa Pastel / Azul Claro", numbers: "6, 15, 24",
+                compat: "Gêmeos, Aquário, Leão",
+                description: "Diplomático, elegante e buscador da harmonia. Libra transforma conflitos em consensos estéticos e éticos.",
+                strengths: "Senso de justiça impecável, charme, capacidade de ver múltiplos lados.",
+                weaknesses: "Indecisão ao tomar lados, aversão a confrontos necessários.",
+                love: "Idealista no amor, valoriza o companheirismo refinado e a paz conjugal.",
+                career: "Sobressai em advocacia, mediação, design de interiores e diplomacia."
+            },
+            {
+                sign: "Escorpião",
+                icon: "fa-eye",
+                start: [10, 23], end: [11, 21],
+                element: "Água", ruler: "Plutão / Marte", quality: "Fixo",
+                stone: "Topázio Imperial", color: "Vinho / Preto", numbers: "8, 17, 26",
+                compat: "Câncer, Peixes, Capricórnio",
+                description: "Magnético, intenso e transformador. Escorpião enxerga nas profundezas da alma humana.",
+                strengths: "Poder de regeneração, foco inquebrável, lealdade feroz.",
+                weaknesses: "Desconfiança inicial, ciúme ou guardar ressentimentos.",
+                love: "Exige verdade absoluta e profundidade emocional sem superficialidade.",
+                career: "Brilha em investigação, cirurgia, psicanálise e inteligência estratégica."
+            },
+            {
+                sign: "Sagitário",
+                icon: "fa-location-arrow",
+                start: [11, 22], end: [12, 21],
+                element: "Fogo", ruler: "Júpiter", quality: "Mutável",
+                stone: "Turquesa", color: "Púrpura / Azul Real", numbers: "3, 12, 21",
+                compat: "Áries, Leão, Aquário",
+                description: "Aventureiro, filosófico e otimista incansável. Sagitário busca expansão de horizontes e sabedoria.",
+                strengths: "Visão ampla de futuro, entusiasmo expansivo, honestidade cristalina.",
+                weaknesses: "Sinceridade sem filtro, inquietude constante.",
+                love: "Precisa de espaço, liberdade de movimento e companheiros de jornada intelectual e viagens.",
+                career: "Excelente para turismo internacional, filosofia, docência superior e expansão comercial."
+            },
+            {
+                sign: "Capricórnio",
+                icon: "fa-mountain-city",
+                start: [12, 22], end: [1, 19],
+                element: "Terra", ruler: "Saturno", quality: "Cardinal",
+                stone: "Granada", color: "Cinza Chumbo / Marrom", numbers: "4, 13, 22",
+                compat: "Touro, Virgem, Escorpião",
+                description: "Determinado, disciplinado e mestre da resiliência. Capricórnio constrói impérios com paciência.",
+                strengths: "Responsabilidade máxima, pragmatismo, estratégia a longo prazo.",
+                weaknesses: "Pessimismo prévio, exigência elevada de desempenho.",
+                love: "Cauteloso para abrir o coração, mas extremamente fiel e protetor quando assume compromisso.",
+                career: "Natural para cargos de alta liderança corporativa, engenharia, finanças e governo."
+            },
+            {
+                sign: "Aquário",
+                icon: "fa-bolt",
+                start: [1, 20], end: [2, 18],
+                element: "Ar", ruler: "Urano", quality: "Fixo",
+                stone: "Ametista", color: "Azul Turquesa / Violeta", numbers: "7, 11, 22",
+                compat: "Gêmeos, Libra, Sagitário",
+                description: "Visionário, humanitário e revolucionário. Aquário pensa décadas à frente de seu tempo.",
+                strengths: "Inovação disruptiva, mente aberta, lealdade aos ideais e amigos.",
+                weaknesses: "Distanciamento emocional, teimosia conceitual.",
+                love: "Busca primeiramente a amizade genuína e o respeito à individualidade de ambos.",
+                career: "Sobressai em inovação tecnológica, aviação, causas sociais e ciências puras."
+            },
+            {
+                sign: "Peixes",
+                icon: "fa-water",
+                start: [2, 19], end: [3, 20],
+                element: "Água", ruler: "Netuno", quality: "Mutável",
+                stone: "Água-Marinha", color: "Verde Água / Violeta", numbers: "3, 7, 12",
+                compat: "Câncer, Escorpião, Touro",
+                description: "Sonhador, sensível e conectado com o invisível. Peixes transborda compaixão e criatividade.",
+                strengths: "Empatia ilimitada, talento artístico, imaginação transcendental.",
+                weaknesses: "Idealização excessiva, escapismo da realidade dura.",
+                love: "Entrega-se com romantismo poético e compaixão total ao ser amado.",
+                career: "Brilha em música, artes plásticas, psicologia, cinema e causas filantrópicas."
+            }
+        ];
+
+        // Determine Zodiac Sign based on Date
+        function getZodiacSign(dateObj) {
+            const month = dateObj.getMonth() + 1; // 1-12
+            const day = dateObj.getDate();
+
+            for (const z of ZODIAC_DATA) {
+                const [sM, sD] = z.start;
+                const [eM, eD] = z.end;
+
+                if ((month === sM && day >= sD) || (month === eM && day <= eD)) {
+                    return z;
+                }
+            }
+            return ZODIAC_DATA[0]; // fallback Capricórnio
+        }
+
+        // Calculate exact age & days to next birthday
+        function calculateBirthStats(birthDate) {
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            // Next Birthday calculation
+            const nextBday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+            if (today > nextBday) {
+                nextBday.setFullYear(today.getFullYear() + 1);
+            }
+            
+            const diffTime = Math.abs(nextBday - today);
+            const daysToBday = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            return { age, daysToBday };
+        }
+
+        // Format Date to readable Portuguese string
+        function formatDateBR(dateObj) {
+            if (!dateObj) return '-';
+            return dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function formatTimeBR(dateObj) {
+            if (!dateObj) return '-';
+            return dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        // Process Zodiac Form Discovery
+        window.processZodiacDiscovery = async function() {
+            if (!currentUser) {
+                showCustomModal("Erro de Conexão", "Autenticando com o servidor de dados. Tente novamente em alguns segundos.");
+                return;
+            }
+
+            const name = document.getElementById('userName').value.trim() || 'ds';
+            const dobString = document.getElementById('birthDate').value;
+            const tobString = document.getElementById('birthTime').value || 'Não informada';
+
+            if (!dobString) {
+                showCustomModal("Atenção", "Por favor, insira uma data de nascimento válida.");
+                return;
+            }
+
+            // Play chime sound
+            playCosmicChime();
+
+            const birthDateParts = dobString.split('-');
+            const birthDateObj = new Date(birthDateParts[0], birthDateParts[1] - 1, birthDateParts[2]);
+
+            const signInfo = getZodiacSign(birthDateObj);
+            const { age, daysToBday } = calculateBirthStats(birthDateObj);
+
+            sessionStartTime = new Date();
+            
+            // Populate Result UI
+            document.getElementById('res-user-name').innerText = name;
+            document.getElementById('res-element').innerText = signInfo.element;
+            document.getElementById('res-ruler').innerText = signInfo.ruler;
+            document.getElementById('res-quality').innerText = signInfo.quality;
+
+            document.getElementById('res-icon').className = `fa-solid ${signInfo.icon} display-1 text-warning`;
+            document.getElementById('res-sign-name').innerText = signInfo.sign;
+            document.getElementById('res-sign-dates').innerText = `(${signInfo.start[1]}/${signInfo.start[0]} - ${signInfo.end[1]}/${signInfo.end[0]})`;
+
+            document.getElementById('res-stone').innerText = signInfo.stone;
+            document.getElementById('res-color').innerText = signInfo.color;
+            document.getElementById('res-numbers').innerText = signInfo.numbers;
+            document.getElementById('res-compat').innerText = signInfo.compat;
+
+            document.getElementById('res-description').innerText = signInfo.description;
+            document.getElementById('res-strengths').innerText = signInfo.strengths;
+            document.getElementById('res-weaknesses').innerText = signInfo.weaknesses;
+            document.getElementById('res-love-text').innerText = signInfo.love;
+            document.getElementById('res-career-text').innerText = signInfo.career;
+
+            // Session Audit Tab UI
+            document.getElementById('audit-dob').innerText = formatDateBR(birthDateObj);
+            document.getElementById('audit-tob').innerText = tobString;
+            document.getElementById('audit-age').innerText = `${age} anos`;
+            document.getElementById('audit-next-bday').innerText = `${daysToBday} dias restantes`;
+            document.getElementById('audit-entry-time').innerText = formatTimeBR(sessionStartTime);
+            document.getElementById('audit-session-status').className = 'badge bg-success';
+            document.getElementById('audit-session-status').innerText = 'Ativa';
+
+            // Show result view
+            document.getElementById('form-container').classList.add('d-none');
+            document.getElementById('result-container').classList.remove('d-none');
+
+            // Save Session and Log into Firestore (Public logs collection)
+            activeSessionDocId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+            
+            const logData = {
+                id: activeSessionDocId,
+                uid: currentUser.uid,
+                userName: name,
+                birthDate: dobString,
+                birthTime: tobString,
+                zodiacSign: signInfo.sign,
+                element: signInfo.element,
+                ruler: signInfo.ruler,
+                quality: signInfo.quality,
+                age: age,
+                daysToNextBirthday: daysToBday,
+                entryTime: sessionStartTime.toISOString(),
+                exitTime: null,
+                durationSeconds: 0,
+                status: 'active',
+                timestamp: serverTimestamp()
+            };
+
+            try {
+                // Rule 1 strictly followed
+                const logRef = doc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
+                await setDoc(logRef, logData);
+
+                // Start Live Timer for active duration
+                if (liveTimerInterval) clearInterval(liveTimerInterval);
+                liveTimerInterval = setInterval(() => {
+                    if (!sessionStartTime) return;
+                    const secs = Math.floor((new Date() - sessionStartTime) / 1000);
+                    document.getElementById('audit-timer').innerText = `(${secs}s de navegação)`;
+                }, 1000);
+
+            } catch (err) {
+                console.error("Error writing to Firestore:", err);
+            }
+        };
+
+        // Explicitly close session
+        window.closeSessionExplicitly = async function() {
+            if (!activeSessionDocId || !sessionStartTime) {
+                resetForm();
+                return;
+            }
+
+            const exitTime = new Date();
+            const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
+
+            try {
+                const logRef = doc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
+                await updateDoc(logRef, {
+                    exitTime: exitTime.toISOString(),
+                    durationSeconds: durationSecs,
+                    status: 'closed'
+                });
+            } catch (e) {
+                console.error("Error updating exit session:", e);
+            }
+
+            if (liveTimerInterval) clearInterval(liveTimerInterval);
+            activeSessionDocId = null;
+            sessionStartTime = null;
+
+            showCustomModal("Sessão Encerrada", "Sua saída foi devidamente registrada no banco de dados Firestore com o tempo total de navegação.");
+            resetForm();
+        };
+
+        // Listen for tab window closure or unload to log exit time automatically
+        window.addEventListener('beforeunload', () => {
+            if (activeSessionDocId && sessionStartTime) {
+                const exitTime = new Date();
+                const durationSecs = Math.floor((exitTime - sessionStartTime) / 1000);
+                const logRef = doc(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs', activeSessionDocId);
+                
+                // Fire and forget update
+                updateDoc(logRef, {
+                    exitTime: exitTime.toISOString(),
+                    durationSeconds: durationSecs,
+                    status: 'closed'
+                }).catch(() => {});
+            }
+        });
+
+        // Reset UI Form
+        window.resetForm = function() {
+            if (liveTimerInterval) clearInterval(liveTimerInterval);
+            document.getElementById('form-container').classList.remove('d-none');
+            document.getElementById('result-container').classList.add('d-none');
+        };
+
+        // Realtime Subscription to Logs Table
+        function listenToFirestoreLogs() {
+            if (!currentUser) return;
+
+            // Simple collection query as per Rule 2
+            const logsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'zodiac_logs');
+            
+            onSnapshot(logsCollection, (snapshot) => {
+                allLogsData = [];
+                snapshot.forEach(docSnap => {
+                    allLogsData.push(docSnap.data());
+                });
+
+                // Sort in JS memory (Rule 2) descending by entryTime
+                allLogsData.sort((a, b) => new Date(b.entryTime || 0) - new Date(a.entryTime || 0));
+
+                renderLogsTable();
+                updateDashboardStats();
+            }, (error) => {
+                console.error("Firestore Listen Error:", error);
+                document.getElementById('logsTableBody').innerHTML = `
+                    <tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados do servidor.</td></tr>
+                `;
+            });
+        }
+
+        // Render Logs Table
+        window.renderLogsTable = function() {
+            const filterVal = (document.getElementById('filterInput').value || '').toLowerCase();
+            const tbody = document.getElementById('logsTableBody');
+            
+            const filtered = allLogsData.filter(item => {
+                const nameMatch = (item.userName || '').toLowerCase().includes(filterVal);
+                const signMatch = (item.zodiacSign || '').toLowerCase().includes(filterVal);
+                return nameMatch || signMatch;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-white-50 py-4">
+                            Nenhum registro encontrado no banco de dados.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const entryDate = item.entryTime ? new Date(item.entryTime) : null;
+                const exitDate = item.exitTime ? new Date(item.exitTime) : null;
+                
+                const formattedEntry = entryDate ? `${formatDateBR(entryDate)} ${formatTimeBR(entryDate)}` : '-';
+                const formattedExit = exitDate ? `${formatTimeBR(exitDate)}` : (item.status === 'active' ? '<span class="badge bg-success">Em andamento</span>' : '-');
+                
+                const duration = item.durationSeconds 
+                    ? `${item.durationSeconds} seg` 
+                    : (item.status === 'active' ? 'Ativo...' : '-');
+
+                const statusBadge = item.status === 'active'
+                    ? '<span class="text-success"><span class="status-dot status-online"></span>Ativo</span>'
+                    : '<span class="text-white-50"><span class="status-dot status-offline"></span>Encerrado</span>';
+
+                return `
+                    <tr>
+                        <td><strong class="text-warning">${escapeHtml(item.userName || 'ds')}</strong></td>
+                        <td><span class="badge badge-element">${escapeHtml(item.zodiacSign || '-')}</span></td>
+                        <td>${item.birthDate ? formatDateBR(new Date(item.birthDate)) : '-'}</td>
+                        <td class="small">${formattedEntry}</td>
+                        <td class="small">${formattedExit}</td>
+                        <td class="small">${duration}</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        // Update Dashboard Analytics Cards
+        function updateDashboardStats() {
+            const total = allLogsData.length;
+            document.getElementById('stat-total').innerText = total;
+
+            if (total === 0) {
+                document.getElementById('stat-avg-age').innerText = '0 anos';
+                document.getElementById('stat-top-sign').innerText = '-';
+                document.getElementById('stat-closed-sessions').innerText = '0';
+                return;
+            }
+
+            // Average Age
+            const sumAge = allLogsData.reduce((acc, curr) => acc + (curr.age || 0), 0);
+            const avgAge = Math.round(sumAge / total);
+            document.getElementById('stat-avg-age').innerText = `${avgAge} anos`;
+
+            // Top Sign
+            const signCounts = {};
+            let closedCount = 0;
+
+            allLogsData.forEach(item => {
+                if (item.zodiacSign) {
+                    signCounts[item.zodiacSign] = (signCounts[item.zodiacSign] || 0) + 1;
+                }
+                if (item.status === 'closed') {
+                    closedCount++;
+                }
+            });
+
+            let topSign = '-';
+            let maxCount = 0;
+            for (const [sign, count] of Object.entries(signCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    topSign = sign;
+                }
+            }
+
+            document.getElementById('stat-top-sign').innerText = topSign;
+            document.getElementById('stat-closed-sessions').innerText = closedCount;
+        }
+
+        // HTML Escape utility
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Initialize Auth on window load
+        window.addEventListener('load', () => {
+            initAuth();
+
+            // Set default date picker to a reasonable default (e.g., year 2000)
+            const birthInput = document.getElementById('birthDate');
+            if (birthInput && !birthInput.value) {
+                birthInput.value = '2000-01-01';
+            }
+        });
+    </script>
+
+    <!-- Canvas Galaxy Particle Animation Script -->
+    <script>
+        const canvas = document.getElementById('galaxy-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let stars = [];
+        const STAR_COUNT = 140;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initStars();
+        });
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.radius = Math.random() * 1.8 + 0.3;
+                this.alpha = Math.random() * 0.8 + 0.2;
+                this.speedAlpha = (Math.random() * 0.02 + 0.005) * (Math.random() > 0.5 ? 1 : -1);
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.color = Math.random() > 0.3 ? '#dfb76c' : '#ffffff';
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+                    this.reset();
+                }
+
+                this.alpha += this.speedAlpha;
+                if (this.alpha >= 0.95 || this.alpha <= 0.1) {
+                    this.speedAlpha = -this.speedAlpha;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, Math.min(1, this.alpha));
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function drawConstellationLines() {
+            const maxDistance = 110;
+            for (let i = 0; i < stars.length; i++) {
+                for (let j = i + 1; j < stars.length; j++) {
+                    const dx = stars[i].x - stars[j].x;
+                    const dy = stars[i].y - stars[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < maxDistance) {
+                        const alpha = (1 - dist / maxDistance) * 0.15;
+                        ctx.strokeStyle = `rgba(223, 183, 108, ${alpha})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(stars[i].x, stars[i].y);
+                        ctx.lineTo(stars[j].x, stars[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateGalaxy() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Subtle dark galactic gradient glow
+            const radialGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, Math.max(width, height));
+            radialGrad.addColorStop(0, 'rgba(30, 24, 68, 0.4)');
+            radialGrad.addColorStop(0.6, 'rgba(15, 11, 38, 0.8)');
+            radialGrad.addColorStop(1, '#090714');
+
+            ctx.fillStyle = radialGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            drawConstellationLines();
+
+            requestAnimationFrame(animateGalaxy);
+        }
+
+        window.onload = function() {
+            resizeCanvas();
+            initStars();
+            animateGalaxy();
+        };
+    </script>
+</body>
+</html>
