@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oráculo Zodíaco Profissional</title>
+    <title>Oráculo Zodíaco Profissional — SQLite Local</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,6 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- sql.js (SQLite WebAssembly) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
 
     <style>
         :root {
@@ -93,12 +95,6 @@
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .encyclopedia-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--gold-primary);
         }
 
         .btn-gold {
@@ -146,22 +142,12 @@
             box-shadow: 0 0 15px rgba(223, 183, 108, 0.3);
         }
 
-        .form-control-mystic::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
-
         .nav-pills-mystic .nav-link {
             color: rgba(255, 255, 255, 0.7);
             border-radius: 30px;
             padding: 8px 18px;
             font-weight: 500;
             border: 1px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .nav-pills-mystic .nav-link:hover {
-            color: var(--gold-light);
         }
 
         .nav-pills-mystic .nav-link.active {
@@ -195,13 +181,6 @@
             color: var(--gold-primary);
             cursor: pointer;
             box-shadow: 0 0 15px var(--gold-glow);
-            transition: all 0.3s ease;
-        }
-
-        .audio-toggle:hover {
-            transform: scale(1.08);
-            background: var(--gold-primary);
-            color: #0d0a21;
         }
 
         .table-mystic {
@@ -219,7 +198,6 @@
         .table-mystic td {
             border-bottom: 1px solid rgba(223, 183, 108, 0.1);
             background: rgba(20, 16, 48, 0.3);
-            color: #f8fafc;
         }
 
         .modal-content-mystic {
@@ -229,34 +207,39 @@
             border-radius: 20px;
         }
 
-        #mystic-toast-container {
+        .zodiac-card {
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .zodiac-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold-primary);
+        }
+
+        #toast-container {
             position: fixed;
-            bottom: 85px;
+            top: 20px;
             right: 20px;
             z-index: 1055;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-width: 340px;
         }
 
-        .mystic-toast {
+        .toast-mystic {
             background: rgba(18, 14, 41, 0.95);
             border: 1px solid var(--gold-primary);
-            color: #f8fafc;
-            padding: 12px 18px;
-            border-radius: 14px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
             font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: fadeInUp 0.3s ease;
+            animation: fadeInRight 0.3s ease;
         }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
     </style>
 </head>
@@ -268,13 +251,12 @@
 
     <div id="loading-screen">
         <i class="fa-solid fa-star-and-crescent fs-1 text-warning fa-spin mb-3"></i>
-        <h4 class="font-cinzel gold-gradient-text">Conectando ao Oráculo Zodíaco...</h4>
+        <h4 class="font-cinzel gold-gradient-text">Inicializando SQLite Local...</h4>
     </div>
 
-    <canvas id="galaxy-canvas"></canvas>
+    <div id="toast-container"></div>
 
-    <!-- Notificações flutuantes -->
-    <div id="mystic-toast-container"></div>
+    <canvas id="galaxy-canvas"></canvas>
 
     <div class="container py-4 relative-content">
         
@@ -283,11 +265,9 @@
                 <i class="fa-solid font-cinzel fa-star-and-crescent fs-2 text-warning me-3"></i>
                 <div>
                     <span class="fs-3 font-cinzel gold-gradient-text fw-bold d-block">ORÁCULO ZODÍACO</span>
-                    <div class="d-flex align-items-center gap-2">
-                        <small id="db-status-badge" class="badge bg-warning text-dark opacity-90" style="font-size: 0.7rem;">
-                            <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Sincronizando Banco...
-                        </small>
-                    </div>
+                    <small id="db-status-badge" class="badge bg-warning text-dark opacity-90" style="font-size: 0.7rem;">
+                        <i class="fa-solid fa-database me-1"></i> SQLite Local Carregando...
+                    </small>
                 </div>
             </div>
             
@@ -304,7 +284,7 @@
                 </li>
                 <li class="nav-item">
                     <button class="nav-link" id="tab-logs-btn" data-bs-toggle="pill" data-bs-target="#tab-logs" type="button" role="tab">
-                        <i class="fa-solid fa-database me-1"></i> Logs <span id="logs-count-pill" class="badge bg-warning text-dark ms-1 rounded-pill">0</span>
+                        <i class="fa-solid fa-database me-1"></i> Banco SQLite (<span id="nav-log-count">0</span>)
                     </button>
                 </li>
                 <li class="nav-item">
@@ -326,13 +306,13 @@
                             <div class="text-center mb-4">
                                 <span class="badge badge-element mb-2"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revelação Instantânea</span>
                                 <h2 class="font-cinzel gold-gradient-text">Descubra Seu Destino Zodiacal</h2>
-                                <p class="text-white-50 fs-6">Preencha os campos para calcular e salvar seu Mapa Astral.</p>
+                                <p class="text-white-50 fs-6">Preencha os campos para calcular seu Mapa Astral e salvar no SQLite local.</p>
                             </div>
 
                             <form id="zodiacForm" onsubmit="event.preventDefault(); processZodiacDiscovery();">
                                 <div class="mb-3">
                                     <label for="userName" class="form-label text-warning font-cinzel"><i class="fa-solid fa-user me-2"></i>Seu Nome</label>
-                                    <input type="text" class="form-control form-control-mystic" id="userName" required placeholder="Digite seu nome completo">
+                                    <input type="text" class="form-control form-control-mystic" id="userName" required placeholder="Digite seu nome">
                                 </div>
 
                                 <div class="row g-3 mb-4">
@@ -346,8 +326,8 @@
                                     </div>
                                 </div>
 
-                                <button type="submit" id="btn-submit-consult" class="btn btn-gold w-100 py-3 text-uppercase font-cinzel">
-                                    <i class="fa-solid fa-gem me-2"></i> Calcular Mapa Astral
+                                <button type="submit" class="btn btn-gold w-100 py-3 text-uppercase font-cinzel">
+                                    <i class="fa-solid fa-gem me-2"></i> Calcular & Salvar no SQLite
                                 </button>
                             </form>
                         </div>
@@ -359,11 +339,11 @@
                         <button class="btn btn-outline-gold px-4" onclick="closeSessionExplicitly(true)">
                             <i class="fa-solid fa-arrow-left me-2"></i> Nova Consulta
                         </button>
-                        <div class="d-flex gap-2 flex-wrap">
+                        <div class="d-flex gap-2">
                             <button class="btn btn-outline-gold btn-sm" onclick="exportToPDF()">
                                 <i class="fa-solid fa-file-pdf me-1"></i> Baixar PDF
                             </button>
-                            <button class="btn btn-success btn-sm rounded-pill px-3" onclick="shareOnWhatsApp()">
+                            <button class="btn btn-success btn-sm" onclick="shareOnWhatsApp()">
                                 <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
                             </button>
                             <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="closeSessionExplicitly(false)">
@@ -376,7 +356,7 @@
                         <div class="glass-card p-4 mb-4 text-center">
                             <h2 class="font-cinzel text-white mb-2">Mapa Astral de <span id="res-user-name" class="gold-gradient-text"></span></h2>
                             <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap mt-3">
-                                <span class="badge badge-element fs-6"><i class="fa-solid fa-fire-flame-curated me-1"></i> Elemento: <strong id="res-element"></strong></span>
+                                <span class="badge badge-element fs-6"><i class="fa-solid fa-fire-flame-curved me-1"></i> Elemento: <strong id="res-element"></strong></span>
                                 <span class="badge badge-element fs-6"><i class="fa-solid fa-globe me-1"></i> Regente: <strong id="res-ruler"></strong></span>
                                 <span class="badge badge-element fs-6"><i class="fa-solid fa-dharmachakra me-1"></i> Qualidade: <strong id="res-quality"></strong></span>
                             </div>
@@ -421,13 +401,13 @@
                                     <p id="res-description" class="lh-lg text-white-80"></p>
                                     <div class="row g-3 mt-2">
                                         <div class="col-md-6">
-                                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-success border-opacity-25 h-100">
+                                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-success border-opacity-25">
                                                 <h6 class="text-success font-cinzel"><i class="fa-solid fa-thumbs-up me-1"></i> Pontos Fortes</h6>
                                                 <p id="res-strengths" class="small mb-0 text-white-50"></p>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-danger border-opacity-25 h-100">
+                                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-danger border-opacity-25">
                                                 <h6 class="text-danger font-cinzel"><i class="fa-solid fa-triangle-exclamation me-1"></i> Desafios</h6>
                                                 <p id="res-weaknesses" class="small mb-0 text-white-50"></p>
                                             </div>
@@ -448,7 +428,6 @@
                             <div class="text-center mb-4">
                                 <i class="fa-solid fa-heart-circle-bolt fs-1 text-danger mb-2"></i>
                                 <h2 class="font-cinzel gold-gradient-text">Sinastria Amorosa</h2>
-                                <p class="text-white-50 small">Descubra a harmonia elemental e cósmica entre duas almas.</p>
                             </div>
                             <form onsubmit="event.preventDefault(); calculateSynastry();" class="row g-3">
                                 <div class="col-md-6">
@@ -466,9 +445,9 @@
                                 </div>
                             </form>
 
-                            <div id="synastry-result" class="mt-4 p-4 rounded-4 bg-dark bg-opacity-75 border border-warning d-none text-center">
+                            <div id="synastry-result" class="mt-4 p-4 rounded bg-dark bg-opacity-60 border border-warning d-none text-center">
                                 <h3 id="syn-score" class="display-4 font-cinzel gold-gradient-text fw-bold">0%</h3>
-                                <h5 id="syn-title" class="text-warning mb-3 font-cinzel"></h5>
+                                <h5 id="syn-title" class="text-warning mb-3"></h5>
                                 <p id="syn-description" class="text-white-80 lh-lg mb-0"></p>
                             </div>
                         </div>
@@ -476,7 +455,7 @@
                 </div>
             </div>
 
-            <!-- LOGS -->
+            <!-- LOGS / SQLITE -->
             <div class="tab-pane fade" id="tab-logs" role="tabpanel">
                 <div class="row g-3 mb-4">
                     <div class="col-md-3 col-6">
@@ -508,11 +487,21 @@
                 <div class="glass-card p-4">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                         <div>
-                            <h4 class="font-cinzel gold-gradient-text mb-0">Histórico de Sessões Salvas</h4>
-                            <small class="text-white-50">Sincronizado automaticamente em tempo real</small>
+                            <h4 class="font-cinzel gold-gradient-text mb-1">Banco de Dados SQLite Local</h4>
+                            <small class="text-white-50">Tabela: <code>consultas</code> • Persistência local automática via IndexedDB</small>
                         </div>
-                        <div class="d-flex gap-2 flex-wrap">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
                             <input type="text" id="filterInput" class="form-control form-control-mystic form-control-sm w-auto" placeholder="Filtrar por nome ou signo..." oninput="renderLogsTable()">
+                            <button class="btn btn-outline-gold btn-sm" onclick="exportSQLiteFile()" title="Baixar arquivo .sqlite">
+                                <i class="fa-solid fa-download me-1"></i> Exportar .sqlite
+                            </button>
+                            <label class="btn btn-outline-gold btn-sm mb-0" title="Importar arquivo .sqlite">
+                                <i class="fa-solid fa-upload me-1"></i> Importar .sqlite
+                                <input type="file" id="importSqliteInput" accept=".sqlite,.db,.sqlite3" class="d-none" onchange="importSQLiteFile(event)">
+                            </label>
+                            <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="confirmClearAllSQLite()" title="Limpar tabela SQLite">
+                                <i class="fa-solid fa-trash-can me-1"></i> Limpar Tudo
+                            </button>
                         </div>
                     </div>
 
@@ -520,6 +509,7 @@
                         <table class="table table-mystic align-middle mb-0">
                             <thead>
                                 <tr>
+                                    <th>ID</th>
                                     <th>Nome</th>
                                     <th>Signo</th>
                                     <th>Idade</th>
@@ -530,7 +520,7 @@
                             </thead>
                             <tbody id="logs-table-body">
                                 <tr>
-                                    <td colspan="6" class="text-center text-white-50 py-4">Nenhum registro encontrado no banco de dados.</td>
+                                    <td colspan="7" class="text-center text-white-50 py-4">Nenhum registro no banco SQLite até o momento.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -541,8 +531,7 @@
             <!-- SIGNOS -->
             <div class="tab-pane fade" id="tab-encyclopedia" role="tabpanel">
                 <div class="glass-card p-4 mb-4 text-center">
-                    <h2 class="font-cinzel gold-gradient-text mb-1">Os Doze Signos do Zodíaco</h2>
-                    <p class="text-white-50 mb-0 small">Explore os arquétipos, elementos, regentes e cristais de cada constelação.</p>
+                    <h2 class="font-cinzel gold-gradient-text">Os Doze Signos</h2>
                 </div>
                 <div class="row g-4" id="encyclopedia-grid"></div>
             </div>
@@ -554,176 +543,301 @@
         <i id="audio-icon" class="fa-solid fa-volume-xmark"></i>
     </button>
 
-    <!-- Modal de Detalhes do Registro -->
+    <!-- Modal Detalhes -->
     <div class="modal fade" id="logDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-content-mystic">
                 <div class="modal-header border-secondary border-opacity-25">
-                    <h5 class="modal-title font-cinzel gold-gradient-text" id="modal-user-title">Detalhes da Consulta</h5>
+                    <h5 class="modal-title font-cinzel gold-gradient-text" id="modal-user-title">Detalhes do Registro SQLite</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="modal-detail-body"></div>
-                <div class="modal-footer border-secondary border-opacity-25" id="modal-detail-footer"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Confirmação Personalizado (substitui confirm()) -->
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <!-- Modal Confirmação -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content modal-content-mystic text-center p-3">
-                <div class="modal-body">
-                    <i class="fa-solid fa-triangle-exclamation fs-1 text-warning mb-3"></i>
-                    <h5 class="font-cinzel text-white mb-2">Excluir Registro?</h5>
-                    <p class="text-white-50 small mb-4" id="confirm-delete-text">Esta ação removerá permanentemente a consulta do banco de dados.</p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-danger btn-sm rounded-pill px-3" id="btn-confirm-delete-action">Excluir</button>
-                    </div>
+            <div class="modal-content modal-content-mystic">
+                <div class="modal-header border-secondary border-opacity-25">
+                    <h6 class="modal-title font-cinzel text-warning">Confirmar Ação</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center" id="confirm-modal-body">
+                    Deseja continuar?
+                </div>
+                <div class="modal-footer border-secondary border-opacity-25 justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-danger rounded-pill px-3" id="confirm-modal-btn">Confirmar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Firebase SDK + Lógica Completa da Aplicação -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Dados completos dos 12 Signos
+    <script>
         const ZODIAC_DATA = [
-            { name: "Áries", dates: "21 Mar - 19 Abr", element: "Fogo", ruler: "Marte", quality: "Cardinal", stone: "Diamante", color: "Vermelho", icon: "fa-fire", desc: "Pioneiro por natureza, Áries possui uma energia vibrante, coragem inabalável e impulso para iniciar novos caminhos com determinação.", strengths: "Liderança, coragem, entusiasmo e iniciativa", weaknesses: "Impaciência, impulsividade e teimosia" },
-            { name: "Touro", dates: "20 Abr - 20 Mai", element: "Terra", ruler: "Vênus", quality: "Fixo", stone: "Esmeralda", color: "Verde", icon: "fa-mountain", desc: "Ancorado na estabilidade e nos prazeres sensoriais, Touro constrói com paciência, lealdade e um profundo senso de valor.", strengths: "Lealdade, estabilidade, persistência e praticidade", weaknesses: "Teimosia, possessividade e resistência a mudanças" },
-            { name: "Gêmeos", dates: "21 Mai - 20 Jun", element: "Ar", ruler: "Mercúrio", quality: "Mutável", stone: "Ágata", color: "Amarelo", icon: "fa-wind", desc: "Mente ágil e comunicativa, Gêmeos explora o mundo através das ideias, da curiosidade intelectual e da troca constante.", strengths: "Versatilidade, inteligência, comunicação e adaptabilidade", weaknesses: "Inconstância, dispersão e ansiedade mental" },
-            { name: "Câncer", dates: "21 Jun - 22 Jul", element: "Água", ruler: "Lua", quality: "Cardinal", stone: "Pérola", color: "Prata", icon: "fa-water", desc: "Profundamente intuitivo e protetor, Câncer guia-se pelas emoções, pela memória afetiva e pelo cuidado com quem ama.", strengths: "Sensibilidade, empatia, intuição e acolhimento", weaknesses: "Apego ao passado, oscilação de humor e autodefesa" },
-            { name: "Leão", dates: "23 Jul - 22 Ago", element: "Fogo", ruler: "Sol", quality: "Fixo", stone: "Rubi", color: "Dourado", icon: "fa-sun", desc: "Irradiando calor e criatividade, Leão expressa sua autenticidade com generosidade, nobreza de espírito e brilho natural.", strengths: "Autoconfiança, generosidade, criatividade e carisma", weaknesses: "Orgulho, necessidade de validação e dramatização" },
-            { name: "Virgem", dates: "23 Ago - 22 Set", element: "Terra", ruler: "Mercúrio", quality: "Mutável", stone: "Safira", color: "Azul", icon: "fa-seedling", desc: "Observador atento e dedicado ao aperfeiçoamento, Virgem transforma o caos em ordem com discernimento e espírito prestativo.", strengths: "Organização, análise, dedicação e precisão", weaknesses: "Perfeccionismo, autocrítica e excesso de preocupação" },
-            { name: "Libra", dates: "23 Set - 22 Out", element: "Ar", ruler: "Vênus", quality: "Cardinal", stone: "Opala", color: "Rosa", icon: "fa-scale-balanced", desc: "Buscador incansável da harmonia, da beleza e da justiça, Libra cultiva parcerias equilibradas e diplomacia refinada.", strengths: "Senso de justiça, diplomacia, charme e cooperação", weaknesses: "Indecisão, dificuldade em dizer não e evitação de conflitos" },
-            { name: "Escorpião", dates: "23 Out - 21 Nov", element: "Água", ruler: "Plutão", quality: "Fixo", stone: "Granada", color: "Vinho", icon: "fa-eye", desc: "Intenso, magnético e transformador, Escorpião mergulha nas profundezas da alma humana em busca da verdade essencial.", strengths: "Resiliência, intuição profunda, foco e lealdade", weaknesses: "Desconfiança, intensidade excessiva e apego emocional" },
-            { name: "Sagitário", dates: "22 Nov - 21 Dez", element: "Fogo", ruler: "Júpiter", quality: "Mutável", stone: "Topázio", color: "Púrpura", icon: "fa-compass", desc: "Explorador de horizontes físicos e filosóficos, Sagitário vive guiado pelo otimismo, liberdade e busca por sabedoria.", strengths: "Entusiasmo, otimismo, generosidade e visão ampla", weaknesses: "Franqueza excessiva, impaciência e falta de foco" },
-            { name: "Capricórnio", dates: "22 Dez - 19 Jan", element: "Terra", ruler: "Saturno", quality: "Cardinal", stone: "Ônix", color: "Preto", icon: "fa-chess-rook", desc: "Mestre da disciplina e da realização a longo prazo, Capricórnio escala as montanhas mais altas com sabedoria e foco.", strengths: "Perseverança, responsabilidade, disciplina e estratégia", weaknesses: "Rigidez, excesso de seriedade e pessimismo" },
-            { name: "Aquário", dates: "20 Jan - 18 Fev", element: "Ar", ruler: "Urano", quality: "Fixo", stone: "Ametista", color: "Turquesa", icon: "fa-bolt", desc: "Visionário e original, Aquário antecipa o futuro com pensamento livre, espírito humanitário e criatividade inventiva.", strengths: "Autenticidade, originalidade, fraternidade e visão", weaknesses: "Distanciamento emocional, rebeldia e imprevisibilidade" },
-            { name: "Peixes", dates: "19 Fev - 20 Mar", element: "Água", ruler: "Netuno", quality: "Mutável", stone: "Água-marinha", color: "Verde-água", icon: "fa-fish", desc: "Conectado ao oceano do inconsciente e da arte, Peixes manifesta compaixão universal, sensibilidade espiritual e imaginação.", strengths: "Compaixão, intuição artística, empatia e fluidez", weaknesses: "Hipersensibilidade, escapismo e dispersão" }
+            { name: "Áries", dates: "21 Mar - 19 Abr", element: "Fogo", ruler: "Marte", quality: "Cardinal", stone: "Diamante", color: "Vermelho", icon: "fa-fire", desc: "Corajoso, determinado e entusiasmado. Impulsionado pela energia de Marte, busca sempre novos desafios e lidera pelo exemplo.", strengths: "Liderança, coragem, iniciativa", weaknesses: "Impaciência, impulsividade" },
+            { name: "Touro", dates: "20 Abr - 20 Mai", element: "Terra", ruler: "Vênus", quality: "Fixo", stone: "Esmeralda", color: "Verde", icon: "fa-mountain", desc: "Confiável, paciente e dedicado. Valoriza a estabilidade, o conforto material e os vínculos duradouros.", strengths: "Lealdade, estabilidade, persistência", weaknesses: "Teimosia, resistência a mudanças" },
+            { name: "Gêmeos", dates: "21 Mai - 20 Jun", element: "Ar", ruler: "Mercúrio", quality: "Mutável", stone: "Ágata", color: "Amarelo", icon: "fa-wind", desc: "Curioso, adaptável e comunicativo. Possui mente ágil, interesse por múltiplas áreas e facilidade para conectar ideias.", strengths: "Versatilidade, inteligência, comunicação", weaknesses: "Inconstância, dispersão" },
+            { name: "Câncer", dates: "21 Jun - 22 Jul", element: "Água", ruler: "Lua", quality: "Cardinal", stone: "Pérola", color: "Prata", icon: "fa-water", desc: "Intuitivo, emotivo e empático. Protetor com quem ama, guia-se pela sensibilidade e pela memória afetiva.", strengths: "Sensibilidade, cuidado, intuição", weaknesses: "Apego ao passado, oscilação de humor" },
+            { name: "Leão", dates: "23 Jul - 22 Ago", element: "Fogo", ruler: "Sol", quality: "Fixo", stone: "Rubi", color: "Dourado", icon: "fa-sun", desc: "Generoso, criativo e carismático. Irradia vitalidade, expressividade artística e calor humano.", strengths: "Autoconfiança, generosidade, brilho", weaknesses: "Orgulho, necessidade de aprovação" },
+            { name: "Virgem", dates: "23 Ago - 22 Set", element: "Terra", ruler: "Mercúrio", quality: "Mutável", stone: "Safira", color: "Azul", icon: "fa-seedling", desc: "Analítico, metódico e detalhista. Busca aperfeiçoamento constante, utilidade prática e clareza mental.", strengths: "Organização, discernimento, dedicação", weaknesses: "Perfeccionismo, autocrítica excessiva" },
+            { name: "Libra", dates: "23 Set - 22 Out", element: "Ar", ruler: "Vênus", quality: "Cardinal", stone: "Opala", color: "Rosa", icon: "fa-scale-balanced", desc: "Diplomático, harmonioso e justo. Busca equilíbrio nas relações, senso estético e cooperação.", strengths: "Senso de justiça, diplomacia, charme", weaknesses: "Indecisão, evitar conflitos necessários" },
+            { name: "Escorpião", dates: "23 Out - 21 Nov", element: "Água", ruler: "Plutão", quality: "Fixo", stone: "Granada", color: "Vinho", icon: "fa-eye", desc: "Passional, intuitivo e magnético. Vivencia tudo com profundidade emocional e poder de regeneração.", strengths: "Resiliência, profundidade, foco", weaknesses: "Desconfiança, intensidade extrema" },
+            { name: "Sagitário", dates: "22 Nov - 21 Dez", element: "Fogo", ruler: "Júpiter", quality: "Mutável", stone: "Topázio", color: "Púrpura", icon: "fa-compass", desc: "Otimista, aventureiro e sincero. Ama expandir horizontes físicos, filosóficos e culturais.", strengths: "Entusiasmo, sabedoria, liberdade", weaknesses: "Franqueza excessiva, impaciência" },
+            { name: "Capricórnio", dates: "22 Dez - 19 Jan", element: "Terra", ruler: "Saturno", quality: "Cardinal", stone: "Ônix", color: "Preto", icon: "fa-chess-rook", desc: "Disciplinado, ambicioso e responsável. Constrói conquistas sólidas por meio de foco e maturidade.", strengths: "Perseverança, estratégia, responsabilidade", weaknesses: "Rigidez, excesso de autocobrança" },
+            { name: "Aquário", dates: "20 Jan - 18 Fev", element: "Ar", ruler: "Urano", quality: "Fixo", stone: "Ametista", color: "Turquesa", icon: "fa-bolt", desc: "Inovador, humanitário e independente. Pensa à frente do seu tempo e valoriza a liberdade coletiva.", strengths: "Autenticidade, visão de futuro, originalidade", weaknesses: "Distanciamento emocional, rebeldia" },
+            { name: "Peixes", dates: "19 Fev - 20 Mar", element: "Água", ruler: "Netuno", quality: "Mutável", stone: "Água-marinha", color: "Verde-água", icon: "fa-fish", desc: "Empático, sonhador e artístico. Conecta-se profundamente com a imaginação, espiritualidade e compaixão.", strengths: "Compaixão, criatividade, intuição", weaknesses: "Hipersensibilidade, escapismo" }
         ];
 
-        // Estado Global da Aplicação
+        // ==========================================
+        // MOTOR SQLITE LOCAL (sql.js + IndexedDB)
+        // ==========================================
+        let SQL = null;
+        let sqliteDb = null;
         let databaseLogs = [];
         let currentSession = null;
-        let db = null;
-        let auth = null;
-        let currentUser = null;
-        let unsubscribeLogs = null;
-        let pendingDeleteId = null;
 
-        // Configuração de Ambiente (Firebase)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'oraculo-zodiaco-default';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const IDB_NAME = 'OraculoZodiacoSQLiteDB';
+        const IDB_STORE = 'sqlite_files';
+        const IDB_KEY = 'oraculo_zodiaco.sqlite';
 
-        // Toast Místico (substitui alert())
-        function showMysticToast(message, type = 'gold') {
-            const container = document.getElementById('mystic-toast-container');
-            if (!container) return;
+        function showToast(message, type = 'warning') {
+            const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'mystic-toast';
-            const iconClass = type === 'success' ? 'fa-circle-check text-success' :
-                              type === 'error' ? 'fa-circle-exclamation text-danger' :
-                              'fa-sparkles text-warning';
-            toast.innerHTML = `<i class="fa-solid ${iconClass} fs-5"></i><span>${message}</span>`;
+            toast.className = 'toast-mystic';
+            const icon = type === 'success' ? 'fa-circle-check text-success' : (type === 'danger' ? 'fa-circle-xmark text-danger' : 'fa-database text-warning');
+            toast.innerHTML = `<i class="fa-solid ${icon} me-2"></i>${message}`;
             container.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transition = 'opacity 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
-            }, 3500);
+            }, 3000);
         }
 
-        // Atualiza selo de status do Banco de Dados no Cabeçalho
-        function updateDbStatus(status, label) {
-            const badge = document.getElementById('db-status-badge');
-            if (!badge) return;
-            if (status === 'connected') {
-                badge.className = 'badge bg-success opacity-90';
-                badge.innerHTML = `<i class="fa-solid fa-database me-1"></i> ${label}`;
-            } else if (status === 'offline') {
-                badge.className = 'badge bg-secondary opacity-90';
-                badge.innerHTML = `<i class="fa-solid fa-cloud-slash me-1"></i> ${label}`;
-            } else {
-                badge.className = 'badge bg-warning text-dark opacity-90';
-                badge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-1"></i> ${label}`;
-            }
-        }
-
-        // Inicialização do Firebase Firestore e Autenticação
-        async function initDatabase() {
-            if (!firebaseConfig) {
-                updateDbStatus('offline', 'Modo Sessão Local');
-                return;
-            }
-
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Autenticação obrigatória antes de qualquer consulta (Regra 3)
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    currentUser = user;
-                    if (user) {
-                        updateDbStatus('connected', 'Banco de Dados Conectado');
-                        subscribeToConsultationLogs(user.uid);
-                    } else {
-                        updateDbStatus('offline', 'Aguardando Autenticação');
+        function openIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(IDB_NAME, 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_STORE)) {
+                        db.createObjectStore(IDB_STORE);
                     }
-                });
-            } catch (error) {
-                console.error("Erro ao inicializar banco de dados:", error);
-                updateDbStatus('offline', 'Modo Local (Falha na Nuvem)');
-                showMysticToast('Não foi possível conectar ao banco em nuvem.', 'error');
-            }
-        }
-
-        // Listener em tempo real para a coleção de consultas no Firestore
-        function subscribeToConsultationLogs(userId) {
-            if (!db || !userId) return;
-            if (unsubscribeLogs) unsubscribeLogs();
-
-            // Caminho estrito para dados privados do usuário (Regra 1)
-            const logsCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'zodiac_consultations');
-
-            // Consulta simples sem orderBy/where composto (Regra 2)
-            unsubscribeLogs = onSnapshot(logsCollectionRef, (snapshot) => {
-                const fetched = [];
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    fetched.push({
-                        docId: docSnap.id,
-                        ...data
-                    });
-                });
-
-                // Ordenação em memória do mais recente para o mais antigo
-                fetched.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                databaseLogs = fetched;
-
-                renderLogsTable();
-                updateDashboardStats();
-            }, (error) => {
-                console.error("Erro ao sincronizar registros:", error);
-                showMysticToast('Erro ao carregar histórico do banco de dados.', 'error');
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
             });
         }
 
-        // Cálculos Astrológicos
+        async function loadSQLiteBinaryFromIDB() {
+            try {
+                const idb = await openIndexedDB();
+                return new Promise((resolve, reject) => {
+                    const tx = idb.transaction(IDB_STORE, 'readonly');
+                    const store = tx.objectStore(IDB_STORE);
+                    const req = store.get(IDB_KEY);
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => reject(req.error);
+                });
+            } catch (err) {
+                console.error('Erro ao ler IndexedDB:', err);
+                return null;
+            }
+        }
+
+        async function persistSQLiteToIDB() {
+            if (!sqliteDb) return;
+            try {
+                const binaryArray = sqliteDb.export();
+                const idb = await openIndexedDB();
+                return new Promise((resolve, reject) => {
+                    const tx = idb.transaction(IDB_STORE, 'readwrite');
+                    const store = tx.objectStore(IDB_STORE);
+                    const req = store.put(binaryArray, IDB_KEY);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+            } catch (err) {
+                console.error('Erro ao salvar SQLite no IndexedDB:', err);
+            }
+        }
+
+        async function initSQLiteDatabase() {
+            const statusBadge = document.getElementById('db-status-badge');
+            try {
+                SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+                });
+
+                const savedBinary = await loadSQLiteBinaryFromIDB();
+                if (savedBinary) {
+                    sqliteDb = new SQL.Database(new Uint8Array(savedBinary));
+                } else {
+                    sqliteDb = new SQL.Database();
+                }
+
+                // Cria tabela SQLite se não existir
+                sqliteDb.run(`
+                    CREATE TABLE IF NOT EXISTS consultas (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        log_code TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        dob TEXT NOT NULL,
+                        tob TEXT,
+                        age INTEGER NOT NULL,
+                        sign_name TEXT NOT NULL,
+                        ascendant TEXT NOT NULL,
+                        moon TEXT NOT NULL,
+                        entry_time TEXT NOT NULL,
+                        status TEXT NOT NULL DEFAULT 'Ativa',
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    );
+                `);
+
+                await persistSQLiteToIDB();
+                refreshLogsFromSQLite();
+
+                statusBadge.className = 'badge bg-success opacity-90';
+                statusBadge.innerHTML = '<i class="fa-solid fa-database me-1"></i> SQLite Local Conectado';
+            } catch (err) {
+                console.error('Falha ao iniciar SQLite:', err);
+                statusBadge.className = 'badge bg-danger opacity-90';
+                statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> Erro no SQLite';
+            }
+        }
+
+        function refreshLogsFromSQLite() {
+            if (!sqliteDb) return;
+            const stmt = sqliteDb.prepare("SELECT * FROM consultas ORDER BY id DESC");
+            const rows = [];
+            while (stmt.step()) {
+                const row = stmt.getAsObject();
+                const signObj = ZODIAC_DATA.find(s => s.name === row.sign_name) || ZODIAC_DATA[0];
+                rows.push({
+                    id: row.id,
+                    logCode: row.log_code,
+                    name: row.name,
+                    dob: row.dob,
+                    tob: row.tob || '',
+                    age: row.age,
+                    sign: signObj,
+                    ascendant: row.ascendant,
+                    moon: row.moon,
+                    entryTimeStr: row.entry_time,
+                    status: row.status
+                });
+            }
+            stmt.free();
+            databaseLogs = rows;
+            document.getElementById('nav-log-count').innerText = databaseLogs.length;
+            updateStats();
+            renderLogsTable();
+        }
+
+        async function insertConsultationSQLite(sessionObj) {
+            if (!sqliteDb) return null;
+            sqliteDb.run(
+                `INSERT INTO consultas (log_code, name, dob, tob, age, sign_name, ascendant, moon, entry_time, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    sessionObj.logCode,
+                    sessionObj.name,
+                    sessionObj.dob,
+                    sessionObj.tob || '',
+                    sessionObj.age,
+                    sessionObj.sign.name,
+                    sessionObj.ascendant,
+                    sessionObj.moon,
+                    sessionObj.entryTimeStr,
+                    sessionObj.status
+                ]
+            );
+            const res = sqliteDb.exec("SELECT last_insert_rowid() as last_id");
+            const insertedId = res[0]?.values[0][0] || null;
+            await persistSQLiteToIDB();
+            refreshLogsFromSQLite();
+            return insertedId;
+        }
+
+        async function updateConsultationStatusSQLite(id, newStatus) {
+            if (!sqliteDb || !id) return;
+            sqliteDb.run("UPDATE consultas SET status = ? WHERE id = ?", [newStatus, id]);
+            await persistSQLiteToIDB();
+            refreshLogsFromSQLite();
+        }
+
+        async function deleteConsultationSQLite(id) {
+            if (!sqliteDb || !id) return;
+            sqliteDb.run("DELETE FROM consultas WHERE id = ?", [id]);
+            await persistSQLiteToIDB();
+            refreshLogsFromSQLite();
+            showToast('Registro excluído do banco SQLite.', 'success');
+        }
+
+        function exportSQLiteFile() {
+            if (!sqliteDb) return;
+            const binaryArray = sqliteDb.export();
+            const blob = new Blob([binaryArray], { type: 'application/x-sqlite3' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'oraculo_zodiaco.sqlite';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Arquivo oraculo_zodiaco.sqlite exportado!', 'success');
+        }
+
+        function importSQLiteFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const uInt8Array = new Uint8Array(e.target.result);
+                    const importedDb = new SQL.Database(uInt8Array);
+                    // Verifica se a tabela consultas existe
+                    importedDb.exec("SELECT id, name, sign_name FROM consultas LIMIT 1");
+                    sqliteDb = importedDb;
+                    await persistSQLiteToIDB();
+                    refreshLogsFromSQLite();
+                    showToast('Banco de dados SQLite importado com sucesso!', 'success');
+                } catch (err) {
+                    showToast('Arquivo .sqlite inválido ou incompatível com a tabela consultas.', 'danger');
+                }
+                event.target.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function confirmClearAllSQLite() {
+            showConfirmDialog('Deseja apagar TODOS os registros da tabela SQLite?', async () => {
+                if (!sqliteDb) return;
+                sqliteDb.run("DELETE FROM consultas");
+                sqliteDb.run("DELETE FROM sqlite_sequence WHERE name='consultas'");
+                await persistSQLiteToIDB();
+                refreshLogsFromSQLite();
+                showToast('Todos os registros do SQLite foram removidos.', 'success');
+            });
+        }
+
+        // ==========================================
+        // INICIALIZAÇÃO DA PÁGINA
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            initCanvasStars();
+            renderEncyclopedia();
+            await initSQLiteDatabase();
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, 300);
+        });
+
         function calculateZodiacSign(day, month) {
             if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return ZODIAC_DATA[10];
             if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) return ZODIAC_DATA[11];
@@ -748,276 +862,84 @@
             return Math.max(0, age);
         }
 
-        // Processamento da Consulta e Gravação no Banco de Dados
-        window.processZodiacDiscovery = async function() {
+        async function processZodiacDiscovery() {
             const name = document.getElementById('userName').value.trim();
             const dobStr = document.getElementById('birthDate').value;
             const tobStr = document.getElementById('birthTime').value;
 
             if (!name || !dobStr) return;
 
-            const btn = document.getElementById('btn-submit-consult');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Consultando os Astros...';
+            const dob = new Date(dobStr + 'T00:00:00');
+            const sign = calculateZodiacSign(dob.getDate(), dob.getMonth() + 1);
+            const age = calculateAge(dobStr);
+            const now = new Date();
 
-            try {
-                const dob = new Date(dobStr + 'T00:00:00');
-                const sign = calculateZodiacSign(dob.getDate(), dob.getMonth() + 1);
-                const age = calculateAge(dobStr);
-                const now = new Date();
-
-                let ascendantName = "Requer Horário";
-                if (tobStr) {
-                    const hour = parseInt(tobStr.split(':')[0], 10);
-                    const signIndex = ZODIAC_DATA.findIndex(z => z.name === sign.name);
-                    ascendantName = ZODIAC_DATA[(signIndex + Math.floor(hour / 2)) % 12].name;
-                }
-
-                const moonName = ZODIAC_DATA[(dob.getDate() + dob.getMonth() * 2) % 12].name;
-
-                const sessionRecord = {
-                    clientId: 'LOG-' + Date.now(),
-                    name: name,
-                    dob: dobStr,
-                    tob: tobStr || '',
-                    age: age,
-                    signName: sign.name,
-                    signElement: sign.element,
-                    signRuler: sign.ruler,
-                    signQuality: sign.quality,
-                    signDates: sign.dates,
-                    signStone: sign.stone,
-                    signColor: sign.color,
-                    signIcon: sign.icon,
-                    signDesc: sign.desc,
-                    signStrengths: sign.strengths,
-                    signWeaknesses: sign.weaknesses,
-                    ascendant: ascendantName,
-                    moon: moonName,
-                    entryDateStr: now.toLocaleDateString('pt-BR'),
-                    entryTimeStr: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                    closedTimeStr: '',
-                    status: 'Ativa',
-                    createdAt: Date.now()
-                };
-
-                // Salva no Firestore se autenticado
-                if (db && currentUser) {
-                    const logsCollectionRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'zodiac_consultations');
-                    const docRef = await addDoc(logsCollectionRef, sessionRecord);
-                    sessionRecord.docId = docRef.id;
-                    showMysticToast('Mapa Astral salvo no banco de dados!', 'success');
-                } else {
-                    databaseLogs.unshift(sessionRecord);
-                    renderLogsTable();
-                    updateDashboardStats();
-                }
-
-                currentSession = sessionRecord;
-                displayConsultationResult(sessionRecord);
-            } catch (error) {
-                console.error("Erro ao processar e salvar consulta:", error);
-                showMysticToast('Erro ao salvar consulta no banco.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-gem me-2"></i> Calcular Mapa Astral';
+            let ascendantText = "Requer Horário";
+            if (tobStr) {
+                const hour = parseInt(tobStr.split(':')[0], 10);
+                const signIdx = ZODIAC_DATA.findIndex(s => s.name === sign.name);
+                const ascOffset = Math.floor(hour / 2);
+                ascendantText = ZODIAC_DATA[(signIdx + ascOffset) % 12].name;
             }
-        };
 
-        // Exibe os dados na tela de resultado
-        function displayConsultationResult(session) {
+            currentSession = {
+                id: null,
+                logCode: 'SQL-' + Date.now().toString().slice(-6),
+                name: name,
+                dob: dobStr,
+                tob: tobStr,
+                age: age,
+                sign: sign,
+                ascendant: ascendantText,
+                moon: ZODIAC_DATA[(dob.getDate() + dob.getMonth()) % 12].name,
+                entryTimeStr: now.toLocaleTimeString('pt-BR'),
+                status: 'Ativa'
+            };
+
+            const insertedId = await insertConsultationSQLite(currentSession);
+            currentSession.id = insertedId;
+
+            displaySessionResult(currentSession);
+            showToast(`Consulta #${insertedId} salva no SQLite local!`, 'success');
+        }
+
+        function displaySessionResult(session) {
             document.getElementById('res-user-name').innerText = session.name;
-            document.getElementById('res-element').innerText = session.signElement;
-            document.getElementById('res-ruler').innerText = session.signRuler;
-            document.getElementById('res-quality').innerText = session.signQuality;
-            document.getElementById('res-sign-name').innerText = session.signName;
-            document.getElementById('res-sign-dates').innerText = session.signDates;
+            document.getElementById('res-element').innerText = session.sign.element;
+            document.getElementById('res-ruler').innerText = session.sign.ruler;
+            document.getElementById('res-quality').innerText = session.sign.quality;
+            document.getElementById('res-icon').className = `fa-solid ${session.sign.icon} display-1 text-warning`;
+            document.getElementById('res-sign-name').innerText = session.sign.name;
+            document.getElementById('res-sign-dates').innerText = session.sign.dates;
             document.getElementById('res-ascendant').innerText = session.ascendant;
             document.getElementById('res-moon').innerText = session.moon;
-            document.getElementById('res-stone').innerText = session.signStone;
-            document.getElementById('res-color').innerText = session.signColor;
-            document.getElementById('res-description').innerText = session.signDesc;
-            document.getElementById('res-strengths').innerText = session.signStrengths;
-            document.getElementById('res-weaknesses').innerText = session.signWeaknesses;
-
-            const iconEl = document.getElementById('res-icon');
-            iconEl.className = `fa-solid ${session.signIcon || 'fa-sun'} display-1 text-warning`;
+            document.getElementById('res-stone').innerText = session.sign.stone;
+            document.getElementById('res-color').innerText = session.sign.color;
+            document.getElementById('res-description').innerText = session.sign.desc;
+            document.getElementById('res-strengths').innerText = session.sign.strengths;
+            document.getElementById('res-weaknesses').innerText = session.sign.weaknesses;
 
             document.getElementById('form-container').classList.add('d-none');
             document.getElementById('result-container').classList.remove('d-none');
         }
 
-        // Encerrar Sessão Atual e Atualizar Status no Banco de Dados
-        window.closeSessionExplicitly = async function(isNewConsulta) {
-            if (currentSession && currentSession.status === 'Ativa') {
-                const closedTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                currentSession.status = 'Encerrada';
-                currentSession.closedTimeStr = closedTime;
-
-                if (db && currentUser && currentSession.docId) {
-                    try {
-                        const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'zodiac_consultations', currentSession.docId);
-                        await updateDoc(docRef, {
-                            status: 'Encerrada',
-                            closedTimeStr: closedTime
-                        });
-                    } catch (err) {
-                        console.error("Erro ao atualizar status no Firestore:", err);
-                    }
-                } else {
-                    renderLogsTable();
-                    updateDashboardStats();
-                }
-
-                if (!isNewConsulta) {
-                    showMysticToast(`Sessão de ${currentSession.name} encerrada e registrada.`, 'gold');
-                }
+        async function closeSessionExplicitly(keepFormFocus) {
+            if (currentSession && currentSession.id) {
+                await updateConsultationStatusSQLite(currentSession.id, 'Encerrada');
+                showToast(`Sessão #${currentSession.id} encerrada no SQLite.`, 'warning');
             }
-
             currentSession = null;
-            document.getElementById('zodiacForm').reset();
             document.getElementById('result-container').classList.add('d-none');
             document.getElementById('form-container').classList.remove('d-none');
-        };
-
-        // Encerrar uma sessão diretamente pela tabela de Logs
-        window.closeLogFromTable = async function(docId) {
-            const logItem = databaseLogs.find(l => (l.docId || l.clientId) === docId);
-            if (!logItem || logItem.status === 'Encerrada') return;
-
-            const closedTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-            if (db && currentUser && logItem.docId) {
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'zodiac_consultations', logItem.docId);
-                    await updateDoc(docRef, {
-                        status: 'Encerrada',
-                        closedTimeStr: closedTime
-                    });
-                    showMysticToast(`Sessão de ${logItem.name} marcada como encerrada.`, 'success');
-                } catch (err) {
-                    console.error("Erro ao encerrar log:", err);
-                    showMysticToast('Erro ao atualizar registro.', 'error');
-                }
-            } else {
-                logItem.status = 'Encerrada';
-                logItem.closedTimeStr = closedTime;
-                renderLogsTable();
-                updateDashboardStats();
+            if (keepFormFocus) {
+                document.getElementById('zodiacForm').reset();
+                document.getElementById('userName').focus();
             }
-        };
+        }
 
-        // Preparar exclusão de registro com modal de confirmação
-        window.promptDeleteLog = function(docId, userName) {
-            pendingDeleteId = docId;
-            document.getElementById('confirm-delete-text').innerText = `Deseja remover permanentemente a consulta de "${userName}" do banco de dados?`;
-            const confirmModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-            confirmModal.show();
-        };
-
-        // Executar exclusão no Firestore
-        document.getElementById('btn-confirm-delete-action').addEventListener('click', async () => {
-            if (!pendingDeleteId) return;
-            const modalEl = document.getElementById('confirmDeleteModal');
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) modalInstance.hide();
-
-            const targetId = pendingDeleteId;
-            pendingDeleteId = null;
-
-            if (db && currentUser) {
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'zodiac_consultations', targetId);
-                    await deleteDoc(docRef);
-                    showMysticToast('Registro excluído do banco de dados.', 'success');
-                } catch (err) {
-                    console.error("Erro ao excluir registro:", err);
-                    showMysticToast('Falha ao excluir registro.', 'error');
-                }
-            } else {
-                databaseLogs = databaseLogs.filter(l => (l.docId || l.clientId) !== targetId);
-                renderLogsTable();
-                updateDashboardStats();
-                showMysticToast('Registro removido.', 'success');
-            }
-        });
-
-        // Reabrir Mapa Astral salvo na aba de Consulta
-        window.reopenConsultation = function(docId) {
-            const logItem = databaseLogs.find(l => (l.docId || l.clientId) === docId);
-            if (!logItem) return;
-
-            const detailModalEl = document.getElementById('logDetailModal');
-            const detailModal = bootstrap.Modal.getInstance(detailModalEl);
-            if (detailModal) detailModal.hide();
-
-            currentSession = logItem;
-            displayConsultationResult(logItem);
-
-            const consultTabBtn = document.getElementById('tab-consult-btn');
-            const tab = new bootstrap.Tab(consultTabBtn);
-            tab.show();
-        };
-
-        // Renderizar Tabela de Logs
-        window.renderLogsTable = function() {
-            const tbody = document.getElementById('logs-table-body');
-            const filterText = (document.getElementById('filterInput')?.value || '').toLowerCase().trim();
-
-            const filtered = databaseLogs.filter(item =>
-                (item.name || '').toLowerCase().includes(filterText) ||
-                (item.signName || '').toLowerCase().includes(filterText)
-            );
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center text-white-50 py-4">
-                            ${databaseLogs.length === 0 ? 'Nenhum registro encontrado no banco de dados.' : 'Nenhum resultado corresponde ao filtro aplicado.'}
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(log => {
-                const idKey = log.docId || log.clientId;
-                const isActive = log.status === 'Ativa';
-                const statusBadge = isActive
-                    ? `<span class="badge bg-success bg-opacity-25 text-success border border-success">Ativa</span>`
-                    : `<span class="badge bg-secondary bg-opacity-25 text-white-50 border border-secondary">Encerrada</span>`;
-
-                return `
-                    <tr>
-                        <td class="fw-medium">${escapeHtml(log.name)}</td>
-                        <td><span class="text-warning"><i class="fa-solid ${log.signIcon || 'fa-star'} me-1"></i> ${escapeHtml(log.signName)}</span></td>
-                        <td>${log.age} anos</td>
-                        <td><small class="text-white-50">${log.entryDateStr || ''} ${log.entryTimeStr || ''}</small></td>
-                        <td>${statusBadge}</td>
-                        <td class="text-end">
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-warning" onclick="openLogDetails('${idKey}')" title="Ver Detalhes">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                ${isActive ? `
-                                <button class="btn btn-outline-info" onclick="closeLogFromTable('${idKey}')" title="Encerrar Sessão">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>` : ''}
-                                <button class="btn btn-outline-danger" onclick="promptDeleteLog('${idKey}', '${escapeHtml(log.name).replace(/'/g, "\\'")}')" title="Excluir">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        };
-
-        // Atualizar Métricas do Painel de Logs
-        function updateDashboardStats() {
+        function updateStats() {
             const total = databaseLogs.length;
             document.getElementById('stat-total').innerText = total;
-            document.getElementById('logs-count-pill').innerText = total;
 
             if (total === 0) {
                 document.getElementById('stat-avg-age').innerText = '0 anos';
@@ -1026,241 +948,240 @@
                 return;
             }
 
-            const sumAge = databaseLogs.reduce((acc, item) => acc + (Number(item.age) || 0), 0);
-            const avgAge = Math.round(sumAge / total);
+            const avgAge = Math.round(databaseLogs.reduce((acc, item) => acc + item.age, 0) / total);
             document.getElementById('stat-avg-age').innerText = `${avgAge} anos`;
 
-            const signCounts = {};
-            let topSign = '-';
-            let maxCount = 0;
+            const counts = {};
             databaseLogs.forEach(item => {
-                const s = item.signName;
-                if (!s) return;
-                signCounts[s] = (signCounts[s] || 0) + 1;
-                if (signCounts[s] > maxCount) {
-                    maxCount = signCounts[s];
-                    topSign = s;
-                }
+                counts[item.sign.name] = (counts[item.sign.name] || 0) + 1;
             });
+            const topSign = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
             document.getElementById('stat-top-sign').innerText = topSign;
 
             const closedCount = databaseLogs.filter(item => item.status === 'Encerrada').length;
             document.getElementById('stat-closed-sessions').innerText = closedCount;
         }
 
-        // Abrir Modal com Detalhes da Consulta
-        window.openLogDetails = function(docId) {
-            const log = databaseLogs.find(l => (l.docId || l.clientId) === docId);
+        function renderLogsTable() {
+            const tbody = document.getElementById('logs-table-body');
+            const filter = (document.getElementById('filterInput').value || '').toLowerCase();
+
+            const filtered = databaseLogs.filter(log =>
+                log.name.toLowerCase().includes(filter) ||
+                log.sign.name.toLowerCase().includes(filter)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-white-50 py-4">Nenhum registro encontrado no SQLite.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(log => {
+                const statusBadge = log.status === 'Ativa'
+                    ? `<span class="badge bg-success">Ativa</span>`
+                    : `<span class="badge bg-secondary">Encerrada</span>`;
+
+                return `
+                    <tr>
+                        <td><small class="text-warning fw-bold">#${log.id}</small></td>
+                        <td class="fw-semibold text-white">${escapeHtml(log.name)}</td>
+                        <td><span class="badge badge-element"><i class="fa-solid ${log.sign.icon} me-1"></i>${log.sign.name}</span></td>
+                        <td>${log.age} anos</td>
+                        <td><small class="text-white-50">${log.entryTimeStr}</small></td>
+                        <td>${statusBadge}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-gold me-1" onclick="openLogModal(${log.id})" title="Ver Detalhes">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="reopenConsultation(${log.id})" title="Abrir Mapa">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteLog(${log.id})" title="Excluir do SQLite">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openLogModal(id) {
+            const log = databaseLogs.find(l => l.id === id);
             if (!log) return;
 
-            document.getElementById('modal-user-title').innerText = `Mapa Astral — ${log.name}`;
+            document.getElementById('modal-user-title').innerText = `Registro SQLite #${log.id} — ${log.name}`;
             document.getElementById('modal-detail-body').innerHTML = `
-                <div class="text-center mb-3">
-                    <i class="fa-solid ${log.signIcon || 'fa-star'} fs-1 text-warning mb-2"></i>
-                    <h4 class="font-cinzel gold-gradient-text mb-0">${escapeHtml(log.signName)}</h4>
-                    <small class="text-white-50">${escapeHtml(log.signDates)} • Elemento ${escapeHtml(log.signElement)}</small>
-                </div>
-                <div class="row g-2 small mb-3">
-                    <div class="col-6"><div class="p-2 rounded bg-dark bg-opacity-50"><strong>Nascimento:</strong> ${log.dob.split('-').reverse().join('/')}</div></div>
-                    <div class="col-6"><div class="p-2 rounded bg-dark bg-opacity-50"><strong>Idade:</strong> ${log.age} anos</div></div>
-                    <div class="col-6"><div class="p-2 rounded bg-dark bg-opacity-50"><strong>Ascendente:</strong> ${escapeHtml(log.ascendant)}</div></div>
-                    <div class="col-6"><div class="p-2 rounded bg-dark bg-opacity-50"><strong>Lua:</strong> ${escapeHtml(log.moon)}</div></div>
-                    <div class="col-6"><div class="p-2 rounded bg-dark bg-opacity-50"><strong>Regente:</strong> ${escapeHtml(log.signRuler)}</div></div>
-                    <div class="col-6"><div class="p-2 rounded bg-dark bg-opacity-50"><strong>Pedra:</strong> ${escapeHtml(log.signStone)}</div></div>
-                </div>
-                <p class="small text-white-80 mb-2">${escapeHtml(log.signDesc)}</p>
-                <div class="d-flex justify-content-between text-white-50 small border-top border-secondary border-opacity-25 pt-2 mt-2">
-                    <span>Entrada: ${log.entryDateStr || ''} ${log.entryTimeStr || ''}</span>
-                    <span>Status: <strong>${log.status}</strong></span>
-                </div>
+                <ul class="list-group list-group-flush bg-transparent">
+                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary border-opacity-25">
+                        <span>Código SQL:</span><strong class="text-warning">${log.logCode}</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary border-opacity-25">
+                        <span>Data Nascimento:</span><strong>${log.dob.split('-').reverse().join('/')} (${log.age} anos)</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary border-opacity-25">
+                        <span>Signo Solar:</span><strong class="text-warning">${log.sign.name} (${log.sign.element})</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary border-opacity-25">
+                        <span>Ascendente:</span><strong>${log.ascendant}</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary border-opacity-25">
+                        <span>Signo Lunar:</span><strong>${log.moon}</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary border-opacity-25">
+                        <span>Status:</span><strong>${log.status}</strong>
+                    </li>
+                </ul>
             `;
-
-            document.getElementById('modal-detail-footer').innerHTML = `
-                <button type="button" class="btn btn-outline-gold btn-sm" onclick="reopenConsultation('${docId}')">
-                    <i class="fa-solid fa-expand me-1"></i> Abrir Mapa Completo
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Fechar</button>
-            `;
-
             const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
             modal.show();
-        };
+        }
 
-        // Sinastria Amorosa
-        window.calculateSynastry = function() {
+        function reopenConsultation(id) {
+            const log = databaseLogs.find(l => l.id === id);
+            if (!log) return;
+            currentSession = log;
+            displaySessionResult(log);
+            const consultTab = new bootstrap.Tab(document.getElementById('tab-consult-btn'));
+            consultTab.show();
+        }
+
+        function confirmDeleteLog(id) {
+            showConfirmDialog(`Deseja excluir o registro #${id} do SQLite?`, () => {
+                deleteConsultationSQLite(id);
+            });
+        }
+
+        function showConfirmDialog(message, onConfirm) {
+            document.getElementById('confirm-modal-body').innerText = message;
+            const confirmModalEl = document.getElementById('confirmModal');
+            const modal = new bootstrap.Modal(confirmModalEl);
+            const btn = document.getElementById('confirm-modal-btn');
+            btn.onclick = () => {
+                modal.hide();
+                onConfirm();
+            };
+            modal.show();
+        }
+
+        function calculateSynastry() {
             const name1 = document.getElementById('syn-name1').value.trim();
             const date1 = document.getElementById('syn-date1').value;
             const name2 = document.getElementById('syn-name2').value.trim();
             const date2 = document.getElementById('syn-date2').value;
-
             if (!name1 || !date1 || !name2 || !date2) return;
 
             const d1 = new Date(date1 + 'T00:00:00');
             const d2 = new Date(date2 + 'T00:00:00');
-
-            const sign1 = calculateZodiacSign(d1.getDate(), d1.getMonth() + 1);
-            const sign2 = calculateZodiacSign(d2.getDate(), d2.getMonth() + 1);
+            const s1 = calculateZodiacSign(d1.getDate(), d1.getMonth() + 1);
+            const s2 = calculateZodiacSign(d2.getDate(), d2.getMonth() + 1);
 
             let score = 70;
-            let title = '';
-            let desc = '';
-
-            if (sign1.element === sign2.element) {
-                score = 94;
-                title = `Sintonia Elemental de ${sign1.element} (${sign1.name} & ${sign2.name})`;
-                desc = `${name1} (${sign1.name}) e ${name2} (${sign2.name}) compartilham o mesmo elemento (${sign1.element}). Existe uma compreensão natural, fluidez intuitiva e objetivos alinhados na jornada afetiva.`;
-            } else if (
-                (sign1.element === 'Fogo' && sign2.element === 'Ar') ||
-                (sign1.element === 'Ar' && sign2.element === 'Fogo') ||
-                (sign1.element === 'Terra' && sign2.element === 'Água') ||
-                (sign1.element === 'Água' && sign2.element === 'Terra')
-            ) {
-                score = 88;
-                title = `Complementaridade Harmônica (${sign1.name} & ${sign2.name})`;
-                desc = `A união entre ${sign1.element} e ${sign2.element} cria um equilíbrio magnético: ${name1} e ${name2} nutrem e potencializam as qualidades um do outro com criatividade e cumplicidade.`;
-            } else {
-                score = 74;
-                title = `Atração de Aprendizado (${sign1.name} & ${sign2.name})`;
-                desc = `Entre ${sign1.element} e ${sign2.element}, ${name1} e ${name2} encontram estímulos para crescer além da zona de conforto. Com diálogo e respeito às diferenças, a relação se torna profundamente transformadora.`;
-            }
+            if (s1.element === s2.element) score = 94;
+            else if (
+                (s1.element === 'Fogo' && s2.element === 'Ar') ||
+                (s1.element === 'Ar' && s2.element === 'Fogo') ||
+                (s1.element === 'Terra' && s2.element === 'Água') ||
+                (s1.element === 'Água' && s2.element === 'Terra')
+            ) score = 88;
+            else if (s1.name === s2.name) score = 85;
+            else score = 68;
 
             document.getElementById('syn-score').innerText = `${score}%`;
-            document.getElementById('syn-title').innerText = title;
-            document.getElementById('syn-description').innerText = desc;
+            document.getElementById('syn-title').innerText = `${name1} (${s1.name}) & ${name2} (${s2.name})`;
+            document.getElementById('syn-description').innerText = `A união entre ${s1.element} e ${s2.element} revela uma conexão marcada por ${s1.strengths.toLowerCase()} somada a ${s2.strengths.toLowerCase()}.`;
             document.getElementById('synastry-result').classList.remove('d-none');
-        };
+        }
 
-        // Renderizar Enciclopédia dos 12 Signos
         function renderEncyclopedia() {
             const grid = document.getElementById('encyclopedia-grid');
-            if (!grid) return;
-
-            grid.innerHTML = ZODIAC_DATA.map(z => `
-                <div class="col-lg-4 col-md-6">
-                    <div class="glass-card encyclopedia-card p-4 h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="badge badge-element">${z.element}</span>
-                                <small class="text-white-50">${z.dates}</small>
-                            </div>
-                            <div class="text-center my-3">
-                                <i class="fa-solid ${z.icon} fs-1 text-warning mb-2"></i>
-                                <h4 class="font-cinzel gold-gradient-text mb-0">${z.name}</h4>
-                                <small class="text-white-50">Regente: ${z.ruler} • ${z.quality}</small>
-                            </div>
-                            <p class="small text-white-80 lh-base mt-3">${z.desc}</p>
+            grid.innerHTML = ZODIAC_DATA.map(sign => `
+                <div class="col-md-4 col-sm-6">
+                    <div class="glass-card zodiac-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="font-cinzel gold-gradient-text mb-0">${sign.name}</h4>
+                            <i class="fa-solid ${sign.icon} fs-3 text-warning"></i>
                         </div>
-                        <div class="border-top border-secondary border-opacity-25 pt-3 mt-3 d-flex justify-content-between small">
-                            <span><i class="fa-solid fa-gem text-warning me-1"></i> ${z.stone}</span>
-                            <span><i class="fa-solid fa-palette text-warning me-1"></i> ${z.color}</span>
+                        <p class="small text-warning mb-2">${sign.dates} • ${sign.element}</p>
+                        <p class="small text-white-50 mb-3">${sign.desc}</p>
+                        <div class="d-flex justify-content-between small border-top border-secondary border-opacity-25 pt-2">
+                            <span>Regente: <strong class="text-white">${sign.ruler}</strong></span>
+                            <span>Pedra: <strong class="text-warning">${sign.stone}</strong></span>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Exportar Mapa Astral para PDF
-        window.exportToPDF = function() {
-            if (!currentSession) return;
+        function exportToPDF() {
             const element = document.getElementById('pdf-export-area');
-            const opt = {
-                margin: 0.4,
-                filename: `Mapa_Astral_${currentSession.name.replace(/\s+/g, '_')}.pdf`,
+            const userName = currentSession ? currentSession.name.replace(/\s+/g, '_') : 'Mapa_Astral';
+            html2pdf().set({
+                margin: 10,
+                filename: `Mapa_Astral_${userName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, backgroundColor: '#090714' },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-            showMysticToast('Gerando documento PDF...', 'gold');
-            html2pdf().set(opt).from(element).save();
-        };
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(element).save();
+        }
 
-        // Compartilhar no WhatsApp
-        window.shareOnWhatsApp = function() {
+        function shareOnWhatsApp() {
             if (!currentSession) return;
-            const text = `✨ *Oráculo Zodíaco* ✨%0A` +
-                         `Consulta de *${currentSession.name}*%0A` +
-                         `☀️ Signo Solar: *${currentSession.signName}* (${currentSession.signElement})%0A` +
-                         `⬆️ Ascendente: *${currentSession.ascendant}*%0A` +
-                         `🌙 Lua: *${currentSession.moon}*%0A` +
-                         `💎 Pedra da Sorte: *${currentSession.signStone}*`;
-            window.open(`https://wa.me/?text=${text}`, '_blank');
-        };
+            const msg = `✨ *Oráculo Zodíaco* ✨%0A*Nome:* ${currentSession.name}%0A*Signo Solar:* ${currentSession.sign.name}%0A*Ascendente:* ${currentSession.ascendant}%0A*Lua:* ${currentSession.moon}%0A*Elemento:* ${currentSession.sign.element}`;
+            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+        }
 
-        // Áudio Ambiente Místico
-        window.toggleAmbienceAudio = function() {
+        function toggleAmbienceAudio() {
             const audio = document.getElementById('bg-audio');
             const icon = document.getElementById('audio-icon');
-            if (!audio) return;
-
             if (audio.paused) {
-                audio.volume = 0.35;
                 audio.play().then(() => {
                     icon.className = 'fa-solid fa-volume-high';
-                }).catch(() => {
-                    showMysticToast('Clique novamente para ativar o áudio.', 'gold');
-                });
+                }).catch(() => {});
             } else {
                 audio.pause();
                 icon.className = 'fa-solid fa-volume-xmark';
             }
-        };
+        }
 
-        // Fundo Estelar Animado (Canvas)
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function initCanvasStars() {
             const canvas = document.getElementById('galaxy-canvas');
-            if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            let stars = [];
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
 
-            function resizeCanvas() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                stars = Array.from({ length: 130 }, () => ({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.6 + 0.3,
-                    alpha: Math.random(),
-                    delta: (Math.random() * 0.015 + 0.004) * (Math.random() < 0.5 ? 1 : -1)
-                }));
-            }
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
 
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const stars = Array.from({ length: 120 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 1.6 + 0.3,
+                alpha: Math.random(),
+                speed: Math.random() * 0.015 + 0.005
+            }));
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
                 stars.forEach(s => {
-                    s.alpha += s.delta;
-                    if (s.alpha <= 0.1 || s.alpha >= 1) s.delta *= -1;
+                    s.alpha += s.speed;
+                    if (s.alpha > 1 || s.alpha < 0.1) s.speed = -s.speed;
                     ctx.beginPath();
-                    ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(243, 229, 171, ${s.alpha})`;
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(243, 229, 171, ${Math.abs(s.alpha)})`;
                     ctx.fill();
                 });
-                requestAnimationFrame(draw);
+                requestAnimationFrame(animate);
             }
-
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas();
-            draw();
+            animate();
         }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-        }
-
-        // Inicialização Geral
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.getElementById('loading-screen').classList.add('hidden');
-            }, 400);
-
-            initCanvasStars();
-            renderEncyclopedia();
-            initDatabase();
-        });
     </script>
 </body>
 </html>
